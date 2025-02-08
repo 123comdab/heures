@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Heures</title> <!-- Titre modifié -->
+    <!-- Intégration de Tailwind CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Styles personnalisés (si nécessaire, mais essayez de minimiser) */
+        .hidden { display: none; } /* Gardez cette classe pour la gestion des erreurs */
+        #totalsTable th {
+            @apply bg-blue-100; /* Utilisez les directives @apply de Tailwind pour réutiliser des styles */
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 font-sans p-6">  <!-- Applique des styles Tailwind au body -->
+
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestion des Heures</h1> <!-- Titre stylisé -->
+
+    <!-- Conteneur principal pour la mise en page -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- Formulaire d'ajout d'employé -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Ajouter un Employé</h2>
+            <label for="employeeName" class="block text-sm font-medium text-gray-700">Nom de l'employé:</label>
+            <input type="text" id="employeeName" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <button id="addEmployeeBtn" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Ajouter Employé
+            </button>
+            <p id="employeeError" class="error text-red-500 mt-2 hidden"></p>
+        </div>
+
+        <!-- Formulaire de saisie des heures -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Saisir les Heures</h2>
+            <label for="employeeSelect" class="block text-sm font-medium text-gray-700">Employé:</label>
+            <select id="employeeSelect" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <option value="">Sélectionnez un employé</option>
+            </select>
+
+            <label for="date" class="block text-sm font-medium text-gray-700 mt-4">Date:</label>
+            <input type="date" id="date" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+
+            <!-- Utilisation de grid pour les heures -->
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                    <label for="morningArrival" class="block text-sm font-medium text-gray-700">Arrivée (Matin):</label>
+                    <input type="time" id="morningArrival" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="morningDeparture" class="block text-sm font-medium text-gray-700">Départ (Matin):</label>
+                    <input type="time" id="morningDeparture" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="afternoonArrival" class="block text-sm font-medium text-gray-700">Arrivée (Après-midi):</label>
+                    <input type="time" id="afternoonArrival" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="afternoonDeparture" class="block text-sm font-medium text-gray-700">Départ (Après-midi):</label>
+                    <input type="time" id="afternoonDeparture" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+            </div>
+
+            <button id="addHoursBtn" class="mt-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Ajouter les Heures
+            </button>
+            <p id="hoursError" class="error text-red-500 mt-2 hidden"></p>
+        </div>
+    </div>
+
+    <!-- Tableau des heures (responsive) -->
+   <div class="mt-8 overflow-x-auto">
+        <h2 class="text-xl font-semibold mb-4">Heures Travaillées</h2>
+        <table id="hoursTable" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrivée (M)</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Départ (M)</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrivée (AM)</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Départ (AM)</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+            </tbody>
+        </table>
+        <button id="saveCSVBtn" class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Télécharger CSV</button>
+    </div>
+    <!-- Tableau des totaux par mois (responsive) -->
+    <div class="mt-8 overflow-x-auto">
+        <h2 class="text-xl font-semibold mb-4">Totaux par Mois</h2>
+        <table id="totalsTable" class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mois</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // --- JavaScript (principalement inchangé, juste quelques ajustements) ---
+
+        let employees = [];
+        let hoursData = [];
+
+        // --- Éléments du DOM ---
+        const employeeNameInput = document.getElementById('employeeName');
+        const addEmployeeBtn = document.getElementById('addEmployeeBtn');
+        const employeeSelect = document.getElementById('employeeSelect');
+        const dateInput = document.getElementById('date');
+        const morningArrivalInput = document.getElementById('morningArrival');
+        const morningDepartureInput = document.getElementById('morningDeparture');
+        const afternoonArrivalInput = document.getElementById('afternoonArrival');
+        const afternoonDepartureInput = document.getElementById('afternoonDeparture');
+        const addHoursBtn = document.getElementById('addHoursBtn');
+        const hoursTableBody = document.getElementById('hoursTable').getElementsByTagName('tbody')[0];
+        const saveCSVBtn = document.getElementById('saveCSVBtn');
+        const employeeError = document.getElementById('employeeError');
+        const hoursError = document.getElementById('hoursError');
+        const totalsTableBody = document.getElementById('totalsTable').getElementsByTagName('tbody')[0];
+
+        // --- Fonctions ---
+
+        function addEmployee() {
+            const name = employeeNameInput.value.trim();
+            if (!name) {
+                showError(employeeError, "Veuillez entrer un nom d'employé.");
+                return;
+            }
+            if (employees.includes(name)) {
+                showError(employeeError, "Cet employé existe déjà.");
+                return;
+            }
+
+            hideError(employeeError);
+            employees.push(name);
+            updateEmployeeSelect();
+            employeeNameInput.value = "";
+        }
+
+
+        function updateEmployeeSelect() {
+            employeeSelect.innerHTML = '<option value="">Sélectionnez un employé</option>';
+            employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee;
+                option.textContent = employee;
+                employeeSelect.appendChild(option);
+            });
+        }
+
+        function addHours() {
+            const employee = employeeSelect.value;
+            const date = dateInput.value;
+            const morningArrival = morningArrivalInput.value;
+            const morningDeparture = morningDepartureInput.value;
+            const afternoonArrival = afternoonArrivalInput.value;
+            const afternoonDeparture = afternoonDepartureInput.value;
+
+            if (!employee || !date) {
+                showError(hoursError, "Veuillez sélectionner un employé et une date.");
+                return;
+            }
+            if (!morningArrival && !morningDeparture && !afternoonArrival && !afternoonDeparture) {
+                showError(hoursError, "Veuillez saisir au moins une plage horaire.");
+                return;
+            }
+            if (morningArrival && morningDeparture && calculateTimeDifference(morningArrival, morningDeparture) <= 0) {
+                showError(hoursError, "L'heure de départ du matin doit être après l'heure d'arrivée.");
+                return;
+            }
+            if (afternoonArrival && afternoonDeparture && calculateTimeDifference(afternoonArrival, afternoonDeparture) <= 0) {
+                showError(hoursError, "L'heure de départ de l'après-midi doit être après l'heure d'arrivée.");
+                return;
+            }
+
+            hideError(hoursError);
+
+            let totalHours = 0;
+            if (morningArrival && morningDeparture) {
+                totalHours += calculateTimeDifference(morningArrival, morningDeparture);
+            }
+            if (afternoonArrival && afternoonDeparture) {
+                totalHours += calculateTimeDifference(afternoonArrival, afternoonDeparture);
+            }
+
+            hoursData.push({
+                employee,
+                date,
+                morningArrival: morningArrival || '',
+                morningDeparture: morningDeparture || '',
+                afternoonArrival: afternoonArrival || '',
+                afternoonDeparture: afternoonDeparture || '',
+                totalHours
+            });
+
+            renderHoursTable();
+            renderTotalsTable();
+            cacheLastEntry();
+            clearHoursInputs();
+        }
+
+        function calculateTimeDifference(startTime, endTime) {
+            const start = new Date(`1970-01-01T${startTime}:00`);
+            const end = new Date(`1970-01-01T${endTime}:00`);
+            return (end - start) / (1000 * 60 * 60);
+        }
+
+
+        function renderHoursTable() {
+            hoursTableBody.innerHTML = '';
+            hoursData.forEach((data, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${data.employee}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.morningArrival}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.morningDeparture}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.afternoonArrival}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.afternoonDeparture}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${data.totalHours.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button class="deleteBtn bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs" data-index="${index}">Supprimer</button>
+                    </td>
+                `;
+                hoursTableBody.appendChild(row);
+            });
+            attachDeleteHandlers();
+        }
+
+        function renderTotalsTable() {
+            totalsTableBody.innerHTML = '';
+            const totals = calculateMonthlyTotals();
+            for (const key in totals) {
+                const [employee, month] = key.split('|');
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${employee}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${month}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${totals[key].toFixed(2)}</td>
+                `;
+                totalsTableBody.appendChild(row);
+            }
+        }
+
+        function calculateMonthlyTotals() {
+            const totals = {};
+            hoursData.forEach(data => {
+                const month = data.date.substring(0, 7);
+                const key = `${data.employee}|${month}`;
+                totals[key] = (totals[key] || 0) + data.totalHours;
+            });
+            return totals;
+        }
+
+        function clearHoursInputs() {
+            dateInput.value = "";
+            morningArrivalInput.value = "";
+            morningDepartureInput.value = "";
+            afternoonArrivalInput.value = "";
+            afternoonDepartureInput.value = "";
+        }
+
+        function deleteHoursEntry(index) {
+            hoursData.splice(index, 1);
+            renderHoursTable();
+            renderTotalsTable();
+        }
+
+        function attachDeleteHandlers() {
+            document.querySelectorAll('.deleteBtn').forEach(button => {
+                button.addEventListener('click', () => {
+                    deleteHoursEntry(parseInt(button.dataset.index, 10));
+                });
+            });
+        }
+
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.remove('hidden');
+        }
+
+        function hideError(element) {
+            element.textContent = '';
+            element.classList.add('hidden');
+        }
+
+        function cacheLastEntry() {
+            const lastEntry = {
+                employee: employeeSelect.value,
+                date: dateInput.value,
+                morningArrival: morningArrivalInput.value,
+                morningDeparture: morningDepartureInput.value,
+                afternoonArrival: afternoonArrivalInput.value,
+                afternoonDeparture: afternoonDepartureInput.value
+            };
+            localStorage.setItem('lastHoursEntry', JSON.stringify(lastEntry));
+        }
+
+
+        function loadCachedEntry() {
+            const cachedEntry = localStorage.getItem('lastHoursEntry');
+            if (cachedEntry) {
+                const entry = JSON.parse(cachedEntry);
+                if (employeeSelect.value === entry.employee) {
+                    dateInput.value = entry.date;
+                    morningArrivalInput.value = entry.morningArrival;
+                    morningDepartureInput.value = entry.morningDeparture;
+                    afternoonArrivalInput.value = entry.afternoonArrival;
+                    afternoonDepartureInput.value = entry.afternoonDeparture;
+                }
+            }
+        }
+
+        function exportToCSV() {
+            if (hoursData.length === 0) {
+                alert("Il n'y a pas de données à exporter.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+
+            csvContent += "Employé,Date,Arrivée (Matin),Départ (Matin),Arrivée (Après-midi),Départ (Après-midi),Total Heures\r\n";
+            hoursData.forEach(data => {
+                csvContent += `"${data.employee}","${data.date}","${data.morningArrival}","${data.morningDeparture}","${data.afternoonArrival}","${data.afternoonDeparture}","${data.totalHours.toFixed(2)}"\r\n`;
+            });
+
+            csvContent += "\r\nTotaux par Mois\r\n";
+            csvContent += "Employé,Mois,Total Heures\r\n";
+            const totals = calculateMonthlyTotals();
+            for (const key in totals) {
+                const [employee, month] = key.split('|');
+                csvContent += `"${employee}","${month}","${totals[key].toFixed(2)}"\r\n`;
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.href = encodedUri;
+            link.download = "heures_employes.csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- Initialisation ---
+        updateEmployeeSelect();
+        employeeSelect.addEventListener('change', loadCachedEntry);
+        addEmployeeBtn.addEventListener('click', addEmployee);
+        addHoursBtn.addEventListener('click', addHours);
+        saveCSVBtn.addEventListener('click', exportToCSV);
+
+    </script>
+</body>
+</html>
