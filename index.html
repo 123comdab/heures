@@ -3,118 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Heures</title> <!-- Titre modifié -->
-    <!-- Intégration de Tailwind CSS via CDN -->
+    <title>Gestion des Heures</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        /* Styles personnalisés (si nécessaire, mais essayez de minimiser) */
-        .hidden { display: none; } /* Gardez cette classe pour la gestion des erreurs */
-        #totalsTable th {
-            @apply bg-blue-100; /* Utilisez les directives @apply de Tailwind pour réutiliser des styles */
-        }
-
+        .hidden { display: none; }
+        #totalsTable th { @apply bg-blue-100; }
+        .error { color: red; }
+        /* Pour le nouvel onglet */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans p-6">  <!-- Applique des styles Tailwind au body -->
+<body class="bg-gray-100 font-sans p-6">
 
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestion des Heures</h1> <!-- Titre stylisé -->
+    <!-- Formulaire de mot de passe (AVEC MOT DE PASSE EN CLAIR) -->
+    <div id="passwordForm" class="bg-white p-6 rounded-lg shadow max-w-sm mx-auto">
+        <h2 class="text-xl font-semibold mb-4">Connexion</h2>
+        <label for="passwordInput" class="block text-sm font-medium text-gray-700">Mot de passe:</label>
+        <input type="password" id="passwordInput" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        <button id="submitPasswordBtn" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Déverrouiller
+        </button>
+        <p id="passwordError" class="error mt-2 hidden"></p>
+    </div>
 
-    <!-- Conteneur principal pour la mise en page -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Contenu de l'application -->
+    <div id="appContent" class="hidden">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestion des Heures</h1>
 
-        <!-- Formulaire d'ajout d'employé -->
-        <div class="bg-white p-6 rounded-lg shadow">
-            <h2 class="text-xl font-semibold mb-4">Ajouter un Employé</h2>
-            <label for="employeeName" class="block text-sm font-medium text-gray-700">Nom de l'employé:</label>
-            <input type="text" id="employeeName" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            <button id="addEmployeeBtn" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Ajouter Employé
-            </button>
-            <p id="employeeError" class="error text-red-500 mt-2 hidden"></p>
+        <!-- Onglets -->
+        <div class="mb-4">
+            <button id="tabHours" class="tab-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2" onclick="openTab('tabHoursContent')">Saisie des Heures</button>
+            <button id="tabEmployees" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabEmployeesContent')">Gestion des Employés</button>
         </div>
 
-        <!-- Formulaire de saisie des heures -->
-        <div class="bg-white p-6 rounded-lg shadow">
-            <h2 class="text-xl font-semibold mb-4">Saisir les Heures</h2>
-            <label for="employeeSelect" class="block text-sm font-medium text-gray-700">Employé:</label>
-            <select id="employeeSelect" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                <option value="">Sélectionnez un employé</option>
-            </select>
+        <!-- Contenu des onglets -->
+        <div id="tabHoursContent" class="tab-content active">
+            <!-- (Le contenu existant pour la saisie des heures) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Formulaire d'ajout d'employé -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Ajouter un Employé</h2>
+                    <label for="employeeName" class="block text-sm font-medium text-gray-700">Nom de l'employé:</label>
+                    <input type="text" id="employeeName" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <button id="addEmployeeBtn" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Ajouter Employé
+                    </button>
+                    <p id="employeeError" class="error mt-2 hidden"></p>
+                </div>
 
-            <label for="date" class="block text-sm font-medium text-gray-700 mt-4">Date:</label>
-            <input type="date" id="date" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <!-- Formulaire de saisie des heures -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Saisir les Heures</h2>
+                    <label for="employeeSelect" class="block text-sm font-medium text-gray-700">Employé:</label>
+                    <select id="employeeSelect" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Sélectionnez un employé</option>
+                    </select>
 
-            <!-- Utilisation de grid pour les heures -->
-            <div class="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                    <label for="morningArrival" class="block text-sm font-medium text-gray-700">Arrivée (Matin):</label>
-                    <input type="time" id="morningArrival" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                </div>
-                <div>
-                    <label for="morningDeparture" class="block text-sm font-medium text-gray-700">Départ (Matin):</label>
-                    <input type="time" id="morningDeparture" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                </div>
-                <div>
-                    <label for="afternoonArrival" class="block text-sm font-medium text-gray-700">Arrivée (Après-midi):</label>
-                    <input type="time" id="afternoonArrival" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                </div>
-                <div>
-                    <label for="afternoonDeparture" class="block text-sm font-medium text-gray-700">Départ (Après-midi):</label>
-                    <input type="time" id="afternoonDeparture" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <label for="date" class="block text-sm font-medium text-gray-700 mt-4">Date:</label>
+                    <input type="date" id="date" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label for="morningArrival" class="block text-sm font-medium text-gray-700">Arrivée (Matin):</label>
+                            <input type="time" id="morningArrival" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="morningDeparture" class="block text-sm font-medium text-gray-700">Départ (Matin):</label>
+                            <input type="time" id="morningDeparture" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="afternoonArrival" class="block text-sm font-medium text-gray-700">Arrivée (Après-midi):</label>
+                            <input type="time" id="afternoonArrival" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="afternoonDeparture" class="block text-sm font-medium text-gray-700">Départ (Après-midi):</label>
+                            <input type="time" id="afternoonDeparture" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+
+                    <button id="addHoursBtn" class="mt-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Ajouter les Heures
+                    </button>
+                    <p id="hoursError" class="error mt-2 hidden"></p>
                 </div>
             </div>
 
-            <button id="addHoursBtn" class="mt-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Ajouter les Heures
-            </button>
-            <p id="hoursError" class="error text-red-500 mt-2 hidden"></p>
+            <!-- Tableaux -->
+            <div class="mt-8 overflow-x-auto">
+                <h2 class="text-xl font-semibold mb-4">Heures Travaillées</h2>
+                <table id="hoursTable" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrivée (M)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Départ (M)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrivée (AM)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Départ (AM)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+                <button id="saveCSVBtn" class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Télécharger CSV</button>
+            </div>
+
+            <div class="mt-8 overflow-x-auto">
+                <h2 class="text-xl font-semibold mb-4">Totaux par Mois</h2>
+                <table id="totalsTable" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mois</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Nouvel onglet pour la gestion des employés -->
+        <div id="tabEmployeesContent" class="tab-content">
+             <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Liste des Employés</h2>
+            <p id="deleteEmployeeMessage" class=" mt-2 "></p>
+            <ul id="employeeList">
+                <!-- La liste des employés sera générée ici -->
+            </ul>
+            </div>
         </div>
     </div>
 
-    <!-- Tableau des heures (responsive) -->
-   <div class="mt-8 overflow-x-auto">
-        <h2 class="text-xl font-semibold mb-4">Heures Travaillées</h2>
-        <table id="hoursTable" class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrivée (M)</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Départ (M)</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrivée (AM)</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Départ (AM)</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-            </tbody>
-        </table>
-        <button id="saveCSVBtn" class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Télécharger CSV</button>
-    </div>
-    <!-- Tableau des totaux par mois (responsive) -->
-    <div class="mt-8 overflow-x-auto">
-        <h2 class="text-xl font-semibold mb-4">Totaux par Mois</h2>
-        <table id="totalsTable" class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mois</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-            </tbody>
-        </table>
-    </div>
-
     <script>
-        // --- JavaScript (principalement inchangé, juste quelques ajustements) ---
-
-        let employees = [];
-        let hoursData = [];
-
-        // --- Éléments du DOM ---
+       // --- Éléments du DOM ---
         const employeeNameInput = document.getElementById('employeeName');
         const addEmployeeBtn = document.getElementById('addEmployeeBtn');
         const employeeSelect = document.getElementById('employeeSelect');
@@ -125,68 +151,223 @@
         const afternoonDepartureInput = document.getElementById('afternoonDeparture');
         const addHoursBtn = document.getElementById('addHoursBtn');
         const hoursTableBody = document.getElementById('hoursTable').getElementsByTagName('tbody')[0];
+        const totalsTableBody = document.getElementById('totalsTable').getElementsByTagName('tbody')[0];
         const saveCSVBtn = document.getElementById('saveCSVBtn');
         const employeeError = document.getElementById('employeeError');
         const hoursError = document.getElementById('hoursError');
-        const totalsTableBody = document.getElementById('totalsTable').getElementsByTagName('tbody')[0];
+        const passwordForm = document.getElementById('passwordForm');
+        const passwordInput = document.getElementById('passwordInput');
+        const submitPasswordBtn = document.getElementById('submitPasswordBtn');
+        const passwordError = document.getElementById('passwordError');
+        const appContent = document.getElementById('appContent');
+        const employeeList = document.getElementById('employeeList'); // La liste des employés
+        const deleteEmployeeMessage = document.getElementById('deleteEmployeeMessage'); //Les messages de confirmation
 
-        // --- Fonctions ---
 
-        function addEmployee() {
+        // --- MOT DE PASSE EN CLAIR (À NE PAS FAIRE EN PRODUCTION) ---
+        const CORRECT_PASSWORD = '0194';
+
+        // --- Fonctions utilitaires ---
+
+        // Affiche une erreur
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.remove('hidden');
+            element.classList.add('error'); // Ajout de la classe error
+        }
+
+        // Masque une erreur
+        function hideError(element) {
+            element.textContent = '';
+            element.classList.add('hidden');
+            element.classList.remove('error');
+        }
+
+        // Gestionnaire d'erreurs localStorage (générique)
+        function handleLocalStorageError(error) {
+            console.error("Erreur localStorage:", error);
+            alert("Une erreur s'est produite lors de l'accès au stockage local. Veuillez vérifier que localStorage est activé et non plein.");
+        }
+
+        // --- Fonctions localStorage (avec gestion d'erreurs) ---
+
+        function saveData(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (error) {
+                handleLocalStorageError(error);
+            }
+        }
+
+        function loadData(key) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : null;
+            } catch (error) {
+                handleLocalStorageError(error);
+                return null;
+            }
+        }
+
+        // --- Vérification du mot de passe (AVEC MOT DE PASSE EN CLAIR - À NE PAS FAIRE) ---
+        function checkPassword() {
+            const password = passwordInput.value;
+            if (password === CORRECT_PASSWORD) {
+                passwordForm.style.display = 'none';
+                appContent.classList.remove('hidden');
+                initializeAppData();
+            } else {
+                showError(passwordError, "Mot de passe incorrect.");
+            }
+        }
+
+        // --- Initialisation de l'application (après la "connexion") ---
+        function initializeAppData() {
+            updateEmployeeSelect();
+            loadCachedEntry();
+            renderHoursTable();
+            renderTotalsTable();
+            renderEmployeeList(); // Ajout : affiche la liste des employés
+            openTab('tabHoursContent'); //Ouvre l'onglet par défaut
+        }
+
+        // --- Gestion des employés ---
+
+       function addEmployee() {
             const name = employeeNameInput.value.trim();
             if (!name) {
                 showError(employeeError, "Veuillez entrer un nom d'employé.");
                 return;
             }
-            if (employees.includes(name)) {
+
+            const employees = loadData('employees') || [];
+            if (employees.some(emp => emp.name === name)) {
                 showError(employeeError, "Cet employé existe déjà.");
                 return;
             }
 
             hideError(employeeError);
-            employees.push(name);
+            employees.push({ id: Date.now(), name: name });
+            saveData('employees', employees);
             updateEmployeeSelect();
+            renderEmployeeList(); // Mise à jour de la liste
             employeeNameInput.value = "";
         }
 
 
         function updateEmployeeSelect() {
+            const employees = loadData('employees') || [];
+            // Vider la liste déroulante (important pour éviter les doublons)
             employeeSelect.innerHTML = '<option value="">Sélectionnez un employé</option>';
-            employees.forEach(employee => {
-                const option = document.createElement('option');
-                option.value = employee;
-                option.textContent = employee;
-                employeeSelect.appendChild(option);
-            });
+
+            if (employees && employees.length > 0) { // Sécurité supplémentaire : vérifie si employees est valide
+                employees.forEach(employee => {
+                    const option = document.createElement('option');
+                    option.value = employee.id;  // Utilise l'ID
+                    option.textContent = employee.name; // Affiche le nom
+                    employeeSelect.appendChild(option);
+                });
+            }
         }
 
+        function deleteEmployee(employeeId) {
+            let employees = loadData('employees') || [];
+            let hoursData = loadData('hoursData') || [];
+
+            // 1. Supprimer l'employé de la liste des employés
+            employees = employees.filter(emp => emp.id !== employeeId);
+
+            // 2. Supprimer TOUTES les entrées d'heures associées à cet employé
+            hoursData = hoursData.filter(entry => entry.employeeId !== employeeId);
+
+             // 3.  Si l'employee est selectionné dans la liste déroulante la vider.
+            if (parseInt(employeeSelect.value, 10) === employeeId) {
+                employeeSelect.value = "";
+            }
+            // 4. Sauvegarder les données mises à jour
+            saveData('employees', employees);
+            saveData('hoursData', hoursData);
+
+            // 5. Mettre à jour l'affichage
+            updateEmployeeSelect();
+            renderHoursTable();
+            renderTotalsTable();
+            renderEmployeeList();
+
+            // 6.  Message de confirmation ou d'erreur
+            deleteEmployeeMessage.textContent = "Employé supprimé avec succès, ainsi que toutes ses heures associées.";
+            deleteEmployeeMessage.classList.remove('error');
+            setTimeout(()=>{
+                deleteEmployeeMessage.textContent = "";
+            }, 3000);
+
+        }
+
+
+        // --- Gestion des heures ---
+
         function addHours() {
-            const employee = employeeSelect.value;
+            // 1. Récupération et validation des données
+            const employeeId = employeeSelect.value;
             const date = dateInput.value;
             const morningArrival = morningArrivalInput.value;
             const morningDeparture = morningDepartureInput.value;
             const afternoonArrival = afternoonArrivalInput.value;
             const afternoonDeparture = afternoonDepartureInput.value;
 
-            if (!employee || !date) {
+            // Validation initiale (plus stricte)
+            if (employeeId === "" || date === "") { // Vérifie explicitement les chaînes vides
                 showError(hoursError, "Veuillez sélectionner un employé et une date.");
                 return;
             }
+
             if (!morningArrival && !morningDeparture && !afternoonArrival && !afternoonDeparture) {
                 showError(hoursError, "Veuillez saisir au moins une plage horaire.");
                 return;
             }
-            if (morningArrival && morningDeparture && calculateTimeDifference(morningArrival, morningDeparture) <= 0) {
-                showError(hoursError, "L'heure de départ du matin doit être après l'heure d'arrivée.");
+
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                showError(hoursError, "Format de date invalide (AAAA-MM-JJ).");
                 return;
             }
-            if (afternoonArrival && afternoonDeparture && calculateTimeDifference(afternoonArrival, afternoonDeparture) <= 0) {
-                showError(hoursError, "L'heure de départ de l'après-midi doit être après l'heure d'arrivée.");
+
+            function isValidTime(time) {
+                return /^\d{2}:\d{2}$/.test(time);
+            }
+
+            function isDepartureAfterArrival(arrival, departure) {
+                if (!isValidTime(arrival) || !isValidTime(departure)) {
+                    return false;
+                }
+                return calculateTimeDifference(arrival, departure) > 0;
+            }
+
+            if (morningArrival && morningDeparture && !isDepartureAfterArrival(morningArrival, morningDeparture)) {
+                showError(hoursError, "L'heure de départ du matin doit être après l'heure d'arrivée, et les heures doivent être au format HH:MM.");
+                return;
+            }
+            if (afternoonArrival && afternoonDeparture && !isDepartureAfterArrival(afternoonArrival, afternoonDeparture)) {
+                showError(hoursError, "L'heure de départ de l'après-midi doit être après l'heure d'arrivée, et les heures doivent être au format HH:MM.");
+                return;
+            }
+            if (morningDeparture && afternoonArrival && calculateTimeDifference(morningDeparture, afternoonArrival) <= 0) {
+                showError(hoursError, "Il y a un chevauchement entre la plage horaire du matin et celle de l'après-midi.");
                 return;
             }
 
             hideError(hoursError);
 
+            // 2. Récupération de l'employé (avec gestion d'erreur)
+              const employees = loadData('employees') || [];
+              const employee = employees.find(emp => emp.id === parseInt(employeeId, 10)); // Conversion en nombre!
+
+            if (!employee) {
+                showError(hoursError, "Employé introuvable. Veuillez recharger la page."); // Message d'erreur plus précis
+                return; // Arrête l'exécution de la fonction
+            }
+            const employeeName = employee.name;
+
+            // 3. Calcul du total des heures
             let totalHours = 0;
             if (morningArrival && morningDeparture) {
                 totalHours += calculateTimeDifference(morningArrival, morningDeparture);
@@ -195,19 +376,26 @@
                 totalHours += calculateTimeDifference(afternoonArrival, afternoonDeparture);
             }
 
-            hoursData.push({
-                employee,
+             // 4. Création de la nouvelle entrée
+            const newEntry = {
+                employeeId: parseInt(employeeId,10), // Stock l'ID en tant que nombre
+                employee: employeeName,
                 date,
                 morningArrival: morningArrival || '',
                 morningDeparture: morningDeparture || '',
                 afternoonArrival: afternoonArrival || '',
                 afternoonDeparture: afternoonDeparture || '',
                 totalHours
-            });
+            };
 
+            // 5. Ajout de la nouvelle entrée et mise à jour de l'affichage
+
+            const hoursData = loadData('hoursData') || [];
+            hoursData.push(newEntry);
+            saveData('hoursData', hoursData);
             renderHoursTable();
             renderTotalsTable();
-            cacheLastEntry();
+            cacheLastEntry(newEntry);
             clearHoursInputs();
         }
 
@@ -217,8 +405,8 @@
             return (end - start) / (1000 * 60 * 60);
         }
 
-
-        function renderHoursTable() {
+       function renderHoursTable() {
+            const hoursData = loadData('hoursData') || [];
             hoursTableBody.innerHTML = '';
             hoursData.forEach((data, index) => {
                 const row = document.createElement('tr');
@@ -240,13 +428,16 @@
         }
 
         function renderTotalsTable() {
+            const hoursData = loadData('hoursData') || [];
             totalsTableBody.innerHTML = '';
-            const totals = calculateMonthlyTotals();
+            const totals = calculateMonthlyTotals(hoursData);
             for (const key in totals) {
-                const [employee, month] = key.split('|');
+                const parts = key.split('|'); // Sépare correctement
+                const employeeName = parts[0];
+                const month = parts[1];
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">${employee}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${employeeName}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${month}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${totals[key].toFixed(2)}</td>
                 `;
@@ -254,14 +445,16 @@
             }
         }
 
-        function calculateMonthlyTotals() {
-            const totals = {};
-            hoursData.forEach(data => {
-                const month = data.date.substring(0, 7);
-                const key = `${data.employee}|${month}`;
-                totals[key] = (totals[key] || 0) + data.totalHours;
-            });
-            return totals;
+
+        function calculateMonthlyTotals(hoursData) {
+          const totals = {};
+          hoursData.forEach(data => {
+            const month = data.date.substring(0, 7); // Extrait AAAA-MM
+            // Crée la clé avec le *nom* de l'employé et le mois
+            const key = `${data.employee}|${month}`;
+            totals[key] = (totals[key] || 0) + data.totalHours;
+          });
+          return totals;
         }
 
         function clearHoursInputs() {
@@ -273,92 +466,136 @@
         }
 
         function deleteHoursEntry(index) {
+            const hoursData = loadData('hoursData') || [];
             hoursData.splice(index, 1);
+            saveData('hoursData', hoursData);
             renderHoursTable();
             renderTotalsTable();
         }
 
         function attachDeleteHandlers() {
-            document.querySelectorAll('.deleteBtn').forEach(button => {
+             hoursTableBody.querySelectorAll('.deleteBtn').forEach(button => {
                 button.addEventListener('click', () => {
                     deleteHoursEntry(parseInt(button.dataset.index, 10));
                 });
             });
         }
 
-        function showError(element, message) {
-            element.textContent = message;
-            element.classList.remove('hidden');
+        function cacheLastEntry(entry) {
+            localStorage.setItem('lastHoursEntry', JSON.stringify(entry));
         }
-
-        function hideError(element) {
-            element.textContent = '';
-            element.classList.add('hidden');
-        }
-
-        function cacheLastEntry() {
-            const lastEntry = {
-                employee: employeeSelect.value,
-                date: dateInput.value,
-                morningArrival: morningArrivalInput.value,
-                morningDeparture: morningDepartureInput.value,
-                afternoonArrival: afternoonArrivalInput.value,
-                afternoonDeparture: afternoonDepartureInput.value
-            };
-            localStorage.setItem('lastHoursEntry', JSON.stringify(lastEntry));
-        }
-
 
         function loadCachedEntry() {
-            const cachedEntry = localStorage.getItem('lastHoursEntry');
+            const cachedEntry = loadData('lastHoursEntry');
             if (cachedEntry) {
-                const entry = JSON.parse(cachedEntry);
-                if (employeeSelect.value === entry.employee) {
-                    dateInput.value = entry.date;
-                    morningArrivalInput.value = entry.morningArrival;
-                    morningDepartureInput.value = entry.morningDeparture;
-                    afternoonArrivalInput.value = entry.afternoonArrival;
-                    afternoonDepartureInput.value = entry.afternoonDeparture;
+                const employees = loadData('employees') || [];
+                // Pré-remplit *seulement* les champs si l'employé existe, mais NE CHANGE PAS la selection active.
+                if (employees.some(emp => emp.id === parseInt(cachedEntry.employeeId, 10))) { // Conversion en nombre
+                    // Si *aucun* employé n'est sélectionné, on sélectionne celui de l'entrée cachée.
+                    if (!employeeSelect.value) {
+                        employeeSelect.value = cachedEntry.employeeId;
+                    }
                 }
+                dateInput.value = cachedEntry.date;
+                morningArrivalInput.value = cachedEntry.morningArrival;
+                morningDepartureInput.value = cachedEntry.morningDeparture;
+                afternoonArrivalInput.value = cachedEntry.afternoonArrival;
+                afternoonDepartureInput.value = cachedEntry.afternoonDeparture;
             }
         }
+         function exportToCSV() {
+            const hoursData = loadData('hoursData') || [];
+                if (hoursData.length === 0) {
+                    alert("Il n'y a pas de données à exporter.");
+                    return;
+                }
 
-        function exportToCSV() {
-            if (hoursData.length === 0) {
-                alert("Il n'y a pas de données à exporter.");
+                let csvContent = "data:text/csv;charset=utf-8,";
+
+                csvContent += "Employé,Date,Arrivée (Matin),Départ (Matin),Arrivée (Après-midi),Départ (Après-midi),Total Heures\r\n";
+                hoursData.forEach(data => {
+                    csvContent += `"${data.employee}","${data.date}","${data.morningArrival}","${data.morningDeparture}","${data.afternoonArrival}","${data.afternoonDeparture}","${data.totalHours.toFixed(2)}"\r\n`;
+                });
+
+                csvContent += "\r\nTotaux par Mois\r\n";
+                csvContent += "Employé,Mois,Total Heures\r\n";
+                const totals = calculateMonthlyTotals(hoursData);
+                for (const key in totals) {
+                    const [employee, month] = key.split('|');
+                    csvContent += `"${employee}","${month}","${totals[key].toFixed(2)}"\r\n`;
+                }
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.href = encodedUri;
+                link.download = "heures_employes.csv";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+        }
+        // --- Gestion des onglets ---
+        function openTab(tabId) {
+            // Masque tous les contenus d'onglets
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+            }
+
+            // Désactive tous les boutons d'onglets
+            const tabButtons = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove("bg-blue-500", "hover:bg-blue-700", "text-white");
+                tabButtons[i].classList.add("bg-gray-300", "hover:bg-gray-400", "text-gray-800");
+            }
+
+            // Affiche le contenu de l'onglet sélectionné et active son bouton
+            document.getElementById(tabId).classList.add("active");
+            const buttonId = tabId.replace("Content", ""); // Extrait l'ID du bouton
+            document.getElementById(buttonId).classList.add("bg-blue-500", "hover:bg-blue-700", "text-white");
+            document.getElementById(buttonId).classList.remove("bg-gray-300", "hover:bg-gray-400", "text-gray-800");
+        }
+
+        // --- Affichage de la liste des employés (pour la suppression) ---
+
+        function renderEmployeeList() {
+            const employees = loadData('employees') || [];
+            employeeList.innerHTML = ''; // Efface la liste existante
+
+            if (employees.length === 0) {
+                employeeList.innerHTML = '<li>Aucun employé enregistré.</li>';
                 return;
             }
 
-            let csvContent = "data:text/csv;charset=utf-8,";
+            employees.forEach(employee => {
+                const listItem = document.createElement('li');
+                listItem.className = 'mb-2'; // Ajoute une marge pour l'espacement
+                listItem.textContent = employee.name;
 
-            csvContent += "Employé,Date,Arrivée (Matin),Départ (Matin),Arrivée (Après-midi),Départ (Après-midi),Total Heures\r\n";
-            hoursData.forEach(data => {
-                csvContent += `"${data.employee}","${data.date}","${data.morningArrival}","${data.morningDeparture}","${data.afternoonArrival}","${data.afternoonDeparture}","${data.totalHours.toFixed(2)}"\r\n`;
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Supprimer';
+                deleteButton.className = 'bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs ml-2'; // Style du bouton
+                deleteButton.addEventListener('click', () => deleteEmployee(employee.id));
+
+                listItem.appendChild(deleteButton); // Ajoute le bouton à l'élément de liste
+                employeeList.appendChild(listItem); // Ajoute l'élément de liste à la liste
             });
-
-            csvContent += "\r\nTotaux par Mois\r\n";
-            csvContent += "Employé,Mois,Total Heures\r\n";
-            const totals = calculateMonthlyTotals();
-            for (const key in totals) {
-                const [employee, month] = key.split('|');
-                csvContent += `"${employee}","${month}","${totals[key].toFixed(2)}"\r\n`;
-            }
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.href = encodedUri;
-            link.download = "heures_employes.csv";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
+
         // --- Initialisation ---
-        updateEmployeeSelect();
-        employeeSelect.addEventListener('change', loadCachedEntry);
+
+        appContent.classList.add('hidden');
+        passwordForm.style.display = 'block';
+
+        // Gestionnaires d'événements
+        submitPasswordBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            checkPassword();
+        });
         addEmployeeBtn.addEventListener('click', addEmployee);
         addHoursBtn.addEventListener('click', addHours);
         saveCSVBtn.addEventListener('click', exportToCSV);
+        employeeSelect.addEventListener('change', loadCachedEntry);
 
     </script>
 </body>
