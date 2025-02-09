@@ -16,7 +16,7 @@
 </head>
 <body class="bg-gray-100 font-sans p-6">
 
-    <!-- Formulaire de mot de passe (AVEC MOT DE PASSE EN CLAIR) -->
+    <!-- Formulaire de mot de passe -->
     <div id="passwordForm" class="bg-white p-6 rounded-lg shadow max-w-sm mx-auto">
         <h2 class="text-xl font-semibold mb-4">Connexion</h2>
         <label for="passwordInput" class="block text-sm font-medium text-gray-700">Mot de passe:</label>
@@ -35,6 +35,7 @@
         <div class="mb-4">
             <button id="tabHours" class="tab-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2" onclick="openTab('tabHoursContent')">Saisie des Heures</button>
             <button id="tabEmployees" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabEmployeesContent')">Gestion des Employés</button>
+              <button id="tabImport" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabImportContent')">Import/Export</button>
         </div>
 
         <!-- Contenu des onglets -->
@@ -108,7 +109,7 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                     </tbody>
                 </table>
-                <button id="saveCSVBtn" class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Télécharger CSV</button>
+
             </div>
 
             <div class="mt-8 overflow-x-auto">
@@ -127,7 +128,7 @@
             </div>
         </div>
 
-        <!-- Nouvel onglet pour la gestion des employés -->
+        <!-- Onglet pour la gestion des employés -->
         <div id="tabEmployeesContent" class="tab-content">
              <div class="bg-white p-6 rounded-lg shadow">
             <h2 class="text-xl font-semibold mb-4">Liste des Employés</h2>
@@ -137,10 +138,26 @@
             </ul>
             </div>
         </div>
+        <!-- Onglet Import/Export -->
+        <div id="tabImportContent" class="tab-content">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Importer / Exporter les données</h2>
+                <p id="importMessage" class="mt-2"></p>
+
+                <button id="importCSVBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Importer CSV
+                </button>
+                <input type="file" id="fileInput" accept=".csv" class="hidden">
+
+                <button id="exportCSVBtn" class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Exporter en CSV
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
-       // --- Éléments du DOM ---
+        // --- Éléments du DOM ---
         const employeeNameInput = document.getElementById('employeeName');
         const addEmployeeBtn = document.getElementById('addEmployeeBtn');
         const employeeSelect = document.getElementById('employeeSelect');
@@ -152,7 +169,6 @@
         const addHoursBtn = document.getElementById('addHoursBtn');
         const hoursTableBody = document.getElementById('hoursTable').getElementsByTagName('tbody')[0];
         const totalsTableBody = document.getElementById('totalsTable').getElementsByTagName('tbody')[0];
-        const saveCSVBtn = document.getElementById('saveCSVBtn');
         const employeeError = document.getElementById('employeeError');
         const hoursError = document.getElementById('hoursError');
         const passwordForm = document.getElementById('passwordForm');
@@ -162,7 +178,10 @@
         const appContent = document.getElementById('appContent');
         const employeeList = document.getElementById('employeeList'); // La liste des employés
         const deleteEmployeeMessage = document.getElementById('deleteEmployeeMessage'); //Les messages de confirmation
-
+        const importCSVBtn = document.getElementById('importCSVBtn'); //Bouton d'importation
+        const fileInput = document.getElementById('fileInput'); //Champs de fichier (caché)
+        const importMessage = document.getElementById('importMessage');  // Messages d'import/export
+        const exportCSVBtn = document.getElementById("exportCSVBtn");
 
         // --- MOT DE PASSE EN CLAIR (À NE PAS FAIRE EN PRODUCTION) ---
         const CORRECT_PASSWORD = '0194';
@@ -173,7 +192,7 @@
         function showError(element, message) {
             element.textContent = message;
             element.classList.remove('hidden');
-            element.classList.add('error'); // Ajout de la classe error
+            element.classList.add('error');
         }
 
         // Masque une erreur
@@ -186,11 +205,10 @@
         // Gestionnaire d'erreurs localStorage (générique)
         function handleLocalStorageError(error) {
             console.error("Erreur localStorage:", error);
-            alert("Une erreur s'est produite lors de l'accès au stockage local. Veuillez vérifier que localStorage est activé et non plein.");
+            alert("Une erreur s'est produite lors de l'accès au stockage local.  Veuillez vérifier que localStorage est activé et non plein.");
         }
 
         // --- Fonctions localStorage (avec gestion d'erreurs) ---
-
         function saveData(key, data) {
             try {
                 localStorage.setItem(key, JSON.stringify(data));
@@ -209,7 +227,7 @@
             }
         }
 
-        // --- Vérification du mot de passe (AVEC MOT DE PASSE EN CLAIR - À NE PAS FAIRE) ---
+        // --- Vérification du mot de passe ---
         function checkPassword() {
             const password = passwordInput.value;
             if (password === CORRECT_PASSWORD) {
@@ -227,13 +245,12 @@
             loadCachedEntry();
             renderHoursTable();
             renderTotalsTable();
-            renderEmployeeList(); // Ajout : affiche la liste des employés
+            renderEmployeeList();
             openTab('tabHoursContent'); //Ouvre l'onglet par défaut
         }
 
         // --- Gestion des employés ---
-
-       function addEmployee() {
+        function addEmployee() {
             const name = employeeNameInput.value.trim();
             if (!name) {
                 showError(employeeError, "Veuillez entrer un nom d'employé.");
@@ -250,21 +267,19 @@
             employees.push({ id: Date.now(), name: name });
             saveData('employees', employees);
             updateEmployeeSelect();
-            renderEmployeeList(); // Mise à jour de la liste
+            renderEmployeeList();
             employeeNameInput.value = "";
         }
 
-
         function updateEmployeeSelect() {
             const employees = loadData('employees') || [];
-            // Vider la liste déroulante (important pour éviter les doublons)
             employeeSelect.innerHTML = '<option value="">Sélectionnez un employé</option>';
 
-            if (employees && employees.length > 0) { // Sécurité supplémentaire : vérifie si employees est valide
+            if (employees && employees.length > 0) {
                 employees.forEach(employee => {
                     const option = document.createElement('option');
-                    option.value = employee.id;  // Utilise l'ID
-                    option.textContent = employee.name; // Affiche le nom
+                    option.value = employee.id;
+                    option.textContent = employee.name;
                     employeeSelect.appendChild(option);
                 });
             }
@@ -274,40 +289,30 @@
             let employees = loadData('employees') || [];
             let hoursData = loadData('hoursData') || [];
 
-            // 1. Supprimer l'employé de la liste des employés
             employees = employees.filter(emp => emp.id !== employeeId);
-
-            // 2. Supprimer TOUTES les entrées d'heures associées à cet employé
             hoursData = hoursData.filter(entry => entry.employeeId !== employeeId);
 
-             // 3.  Si l'employee est selectionné dans la liste déroulante la vider.
             if (parseInt(employeeSelect.value, 10) === employeeId) {
                 employeeSelect.value = "";
             }
-            // 4. Sauvegarder les données mises à jour
+
             saveData('employees', employees);
             saveData('hoursData', hoursData);
 
-            // 5. Mettre à jour l'affichage
             updateEmployeeSelect();
             renderHoursTable();
             renderTotalsTable();
             renderEmployeeList();
 
-            // 6.  Message de confirmation ou d'erreur
             deleteEmployeeMessage.textContent = "Employé supprimé avec succès, ainsi que toutes ses heures associées.";
             deleteEmployeeMessage.classList.remove('error');
-            setTimeout(()=>{
+            setTimeout(() => {
                 deleteEmployeeMessage.textContent = "";
             }, 3000);
-
         }
 
-
         // --- Gestion des heures ---
-
         function addHours() {
-            // 1. Récupération et validation des données
             const employeeId = employeeSelect.value;
             const date = dateInput.value;
             const morningArrival = morningArrivalInput.value;
@@ -315,8 +320,7 @@
             const afternoonArrival = afternoonArrivalInput.value;
             const afternoonDeparture = afternoonDepartureInput.value;
 
-            // Validation initiale (plus stricte)
-            if (employeeId === "" || date === "") { // Vérifie explicitement les chaînes vides
+            if (employeeId === "" || date === "") {
                 showError(hoursError, "Veuillez sélectionner un employé et une date.");
                 return;
             }
@@ -343,31 +347,29 @@
             }
 
             if (morningArrival && morningDeparture && !isDepartureAfterArrival(morningArrival, morningDeparture)) {
-                showError(hoursError, "L'heure de départ du matin doit être après l'heure d'arrivée, et les heures doivent être au format HH:MM.");
+                showError(hoursError, "L'heure de départ du matin doit être après l'heure d'arrivée.");
                 return;
             }
             if (afternoonArrival && afternoonDeparture && !isDepartureAfterArrival(afternoonArrival, afternoonDeparture)) {
-                showError(hoursError, "L'heure de départ de l'après-midi doit être après l'heure d'arrivée, et les heures doivent être au format HH:MM.");
+                showError(hoursError, "L'heure de départ de l'après-midi doit être après l'heure d'arrivée.");
                 return;
             }
-            if (morningDeparture && afternoonArrival && calculateTimeDifference(morningDeparture, afternoonArrival) <= 0) {
+            if (morningDeparture && afternoonArrival && calculateTimeDifference(morningDeparture, afternoonArrival) <=0){
                 showError(hoursError, "Il y a un chevauchement entre la plage horaire du matin et celle de l'après-midi.");
                 return;
             }
 
             hideError(hoursError);
 
-            // 2. Récupération de l'employé (avec gestion d'erreur)
-              const employees = loadData('employees') || [];
-              const employee = employees.find(emp => emp.id === parseInt(employeeId, 10)); // Conversion en nombre!
+            const employees = loadData('employees') || [];
+            const employee = employees.find(emp => emp.id === parseInt(employeeId, 10));
 
             if (!employee) {
-                showError(hoursError, "Employé introuvable. Veuillez recharger la page."); // Message d'erreur plus précis
-                return; // Arrête l'exécution de la fonction
+                showError(hoursError, "Employé introuvable.  Veuillez recharger la page.");
+                return;
             }
             const employeeName = employee.name;
 
-            // 3. Calcul du total des heures
             let totalHours = 0;
             if (morningArrival && morningDeparture) {
                 totalHours += calculateTimeDifference(morningArrival, morningDeparture);
@@ -376,9 +378,8 @@
                 totalHours += calculateTimeDifference(afternoonArrival, afternoonDeparture);
             }
 
-             // 4. Création de la nouvelle entrée
             const newEntry = {
-                employeeId: parseInt(employeeId,10), // Stock l'ID en tant que nombre
+                employeeId: parseInt(employeeId, 10),
                 employee: employeeName,
                 date,
                 morningArrival: morningArrival || '',
@@ -387,8 +388,6 @@
                 afternoonDeparture: afternoonDeparture || '',
                 totalHours
             };
-
-            // 5. Ajout de la nouvelle entrée et mise à jour de l'affichage
 
             const hoursData = loadData('hoursData') || [];
             hoursData.push(newEntry);
@@ -405,7 +404,7 @@
             return (end - start) / (1000 * 60 * 60);
         }
 
-       function renderHoursTable() {
+        function renderHoursTable() {
             const hoursData = loadData('hoursData') || [];
             hoursTableBody.innerHTML = '';
             hoursData.forEach((data, index) => {
@@ -432,7 +431,7 @@
             totalsTableBody.innerHTML = '';
             const totals = calculateMonthlyTotals(hoursData);
             for (const key in totals) {
-                const parts = key.split('|'); // Sépare correctement
+                const parts = key.split('|');
                 const employeeName = parts[0];
                 const month = parts[1];
                 const row = document.createElement('tr');
@@ -445,16 +444,14 @@
             }
         }
 
-
         function calculateMonthlyTotals(hoursData) {
-          const totals = {};
-          hoursData.forEach(data => {
-            const month = data.date.substring(0, 7); // Extrait AAAA-MM
-            // Crée la clé avec le *nom* de l'employé et le mois
-            const key = `${data.employee}|${month}`;
-            totals[key] = (totals[key] || 0) + data.totalHours;
-          });
-          return totals;
+            const totals = {};
+            hoursData.forEach(data => {
+                const month = data.date.substring(0, 7);
+                const key = `${data.employee}|${month}`;
+                totals[key] = (totals[key] || 0) + data.totalHours;
+            });
+            return totals;
         }
 
         function clearHoursInputs() {
@@ -474,7 +471,7 @@
         }
 
         function attachDeleteHandlers() {
-             hoursTableBody.querySelectorAll('.deleteBtn').forEach(button => {
+            hoursTableBody.querySelectorAll('.deleteBtn').forEach(button => {
                 button.addEventListener('click', () => {
                     deleteHoursEntry(parseInt(button.dataset.index, 10));
                 });
@@ -489,10 +486,8 @@
             const cachedEntry = loadData('lastHoursEntry');
             if (cachedEntry) {
                 const employees = loadData('employees') || [];
-                // Pré-remplit *seulement* les champs si l'employé existe, mais NE CHANGE PAS la selection active.
-                if (employees.some(emp => emp.id === parseInt(cachedEntry.employeeId, 10))) { // Conversion en nombre
-                    // Si *aucun* employé n'est sélectionné, on sélectionne celui de l'entrée cachée.
-                    if (!employeeSelect.value) {
+                if (employees.some(emp => emp.id === parseInt(cachedEntry.employeeId, 10))) {
+                   if (!employeeSelect.value) {
                         employeeSelect.value = cachedEntry.employeeId;
                     }
                 }
@@ -503,63 +498,30 @@
                 afternoonDepartureInput.value = cachedEntry.afternoonDeparture;
             }
         }
-         function exportToCSV() {
-            const hoursData = loadData('hoursData') || [];
-                if (hoursData.length === 0) {
-                    alert("Il n'y a pas de données à exporter.");
-                    return;
-                }
 
-                let csvContent = "data:text/csv;charset=utf-8,";
-
-                csvContent += "Employé,Date,Arrivée (Matin),Départ (Matin),Arrivée (Après-midi),Départ (Après-midi),Total Heures\r\n";
-                hoursData.forEach(data => {
-                    csvContent += `"${data.employee}","${data.date}","${data.morningArrival}","${data.morningDeparture}","${data.afternoonArrival}","${data.afternoonDeparture}","${data.totalHours.toFixed(2)}"\r\n`;
-                });
-
-                csvContent += "\r\nTotaux par Mois\r\n";
-                csvContent += "Employé,Mois,Total Heures\r\n";
-                const totals = calculateMonthlyTotals(hoursData);
-                for (const key in totals) {
-                    const [employee, month] = key.split('|');
-                    csvContent += `"${employee}","${month}","${totals[key].toFixed(2)}"\r\n`;
-                }
-
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.href = encodedUri;
-                link.download = "heures_employes.csv";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-        }
         // --- Gestion des onglets ---
         function openTab(tabId) {
-            // Masque tous les contenus d'onglets
             const tabContents = document.getElementsByClassName("tab-content");
             for (let i = 0; i < tabContents.length; i++) {
                 tabContents[i].classList.remove("active");
             }
 
-            // Désactive tous les boutons d'onglets
             const tabButtons = document.getElementsByClassName("tab-button");
             for (let i = 0; i < tabButtons.length; i++) {
                 tabButtons[i].classList.remove("bg-blue-500", "hover:bg-blue-700", "text-white");
                 tabButtons[i].classList.add("bg-gray-300", "hover:bg-gray-400", "text-gray-800");
             }
 
-            // Affiche le contenu de l'onglet sélectionné et active son bouton
             document.getElementById(tabId).classList.add("active");
-            const buttonId = tabId.replace("Content", ""); // Extrait l'ID du bouton
+            const buttonId = tabId.replace("Content", "");
             document.getElementById(buttonId).classList.add("bg-blue-500", "hover:bg-blue-700", "text-white");
             document.getElementById(buttonId).classList.remove("bg-gray-300", "hover:bg-gray-400", "text-gray-800");
         }
 
         // --- Affichage de la liste des employés (pour la suppression) ---
-
         function renderEmployeeList() {
             const employees = loadData('employees') || [];
-            employeeList.innerHTML = ''; // Efface la liste existante
+            employeeList.innerHTML = '';
 
             if (employees.length === 0) {
                 employeeList.innerHTML = '<li>Aucun employé enregistré.</li>';
@@ -568,22 +530,141 @@
 
             employees.forEach(employee => {
                 const listItem = document.createElement('li');
-                listItem.className = 'mb-2'; // Ajoute une marge pour l'espacement
+                listItem.className = 'mb-2';
                 listItem.textContent = employee.name;
 
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = 'Supprimer';
-                deleteButton.className = 'bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs ml-2'; // Style du bouton
+                deleteButton.className = 'bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs ml-2';
                 deleteButton.addEventListener('click', () => deleteEmployee(employee.id));
 
-                listItem.appendChild(deleteButton); // Ajoute le bouton à l'élément de liste
-                employeeList.appendChild(listItem); // Ajoute l'élément de liste à la liste
+                listItem.appendChild(deleteButton);
+                employeeList.appendChild(listItem);
             });
         }
 
+        // --- Import/Export CSV ---
+        function exportToCSV() {
+            const hoursData = loadData('hoursData') || [];
+            const employees = loadData('employees') || [];
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            let csvData = [];
+
+            csvData.push([
+                "Employé", "Date", "Arrivée (Matin)", "Départ (Matin)",
+                "Arrivée (Après-midi)", "Départ (Après-midi)", "Total Heures"
+            ]);
+
+            hoursData.forEach(data => {
+                const employee = employees.find(emp => emp.id === data.employeeId);
+                const employeeName = employee ? employee.name : "Employé Supprimé";
+
+                const row = [
+                    employeeName,
+                    data.date,
+                    data.morningArrival,
+                    data.morningDeparture,
+                    data.afternoonArrival,
+                    data.afternoonDeparture,
+                    data.totalHours.toFixed(2)
+                ];
+                csvData.push(row);
+            });
+
+            csvData.forEach(rowArray => {
+                let row = rowArray.join(",");
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "heures_travaillees.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importFromCSV() {
+            const file = fileInput.files[0];
+            if (!file) {
+                importMessage.textContent = "Aucun fichier sélectionné.";
+                importMessage.classList.add('error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const content = event.target.result;
+                parseCSV(content);
+            };
+            reader.onerror = function() {
+                importMessage.textContent = "Erreur lors de la lecture du fichier.";
+                 importMessage.classList.add('error');
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(content) {
+            const lines = content.split(/\r\n|\n/);
+            const headers = lines[0].split(',');
+            const newHoursData = [];
+            const employees = loadData('employees') || [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const data = line.split(',');
+                if (data.length !== headers.length) {
+                  importMessage.textContent = `Erreur à la ligne ${i + 1}: Nombre de colonnes incorrect.`;
+                  importMessage.classList.add('error');
+                  continue;
+                }
+
+                let employeeName = data[0].trim();
+                let employeeId = null;
+                let employee = employees.find(emp => emp.name === employeeName);
+
+                if (employee) {
+                    employeeId = employee.id;
+                } else {
+                    employeeId = Date.now();
+                    employees.push({ id: employeeId, name: employeeName });
+                    saveData('employees', employees);
+                }
+
+                const newEntry = {
+                    employeeId: employeeId,
+                    employee: employeeName,
+                    date: data[1].trim(),
+                    morningArrival: data[2].trim(),
+                    morningDeparture: data[3].trim(),
+                    afternoonArrival: data[4].trim(),
+                    afternoonDeparture: data[5].trim(),
+                    totalHours: parseFloat(data[6].trim()) // Convertit en nombre
+                };
+
+                newHoursData.push(newEntry);
+            }
+
+            // Fusion des données importées avec les données existantes
+            const existingHoursData = loadData('hoursData') || [];
+            const combinedHoursData = existingHoursData.concat(newHoursData); // Combine les tableaux
+            saveData('hoursData', combinedHoursData);
+
+            renderHoursTable();
+            renderTotalsTable();
+            updateEmployeeSelect();
+            importMessage.textContent = "Données importées avec succès !";
+            importMessage.classList.remove('error');
+            setTimeout(()=>{
+                importMessage.textContent = "";
+            },3000); // Efface le message après 3 secondes
+        }
 
         // --- Initialisation ---
-
         appContent.classList.add('hidden');
         passwordForm.style.display = 'block';
 
@@ -594,8 +675,12 @@
         });
         addEmployeeBtn.addEventListener('click', addEmployee);
         addHoursBtn.addEventListener('click', addHours);
-        saveCSVBtn.addEventListener('click', exportToCSV);
+        exportCSVBtn.addEventListener('click', exportToCSV);
         employeeSelect.addEventListener('change', loadCachedEntry);
+        importCSVBtn.addEventListener('click', () => {
+             fileInput.click();
+         });
+        fileInput.addEventListener('change', importFromCSV);
 
     </script>
 </body>
