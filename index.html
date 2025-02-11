@@ -5,37 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Heures</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .hidden { display: none; }
         #totalsTable th { @apply bg-blue-100; }
         .error { color: red; }
-        /* Pour le nouvel onglet */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+
+        /* Style amélioré pour le tableau de bord (MODERNE ET COLORÉ) */
+        #dashboardTotalsTable {
+            @apply w-full text-sm text-left text-gray-500 dark:text-gray-400 shadow-md rounded-lg overflow-hidden; /* Ajout d'ombre et de coins arrondis */
+        }
+
+        #dashboardTotalsTable th {
+            @apply bg-blue-200 text-blue-700 uppercase font-semibold py-3 px-6; /* Fond bleu plus clair et texte bleu plus foncé */
+        }
+
+        #dashboardTotalsTable td {
+            @apply py-4 px-6 border-b dark:border-gray-700; /* Ajout de bordure inférieure pour séparer les lignes */
+        }
+
+        #dashboardTotalsTable tbody tr:nth-child(even) {
+            @apply bg-gray-50 dark:bg-gray-800; /* Lignes paires légèrement colorées pour l'alternance */
+        }
+
+        #dashboardTotalsTable tbody tr:last-child td {
+            @apply border-b-0; /* Supprime la bordure inférieure de la dernière ligne */
+        }
+
+        #dashboardTotalsTable tbody tr:hover {
+            @apply bg-blue-100 dark:bg-gray-700 hover:shadow-lg transition-shadow duration-300 ease-in-out; /* Effet de survol avec ombre et transition */
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans p-6">
 
-    <!-- Formulaire de mot de passe -->
-    <div id="passwordForm" class="bg-white p-6 rounded-lg shadow max-w-sm mx-auto">
-        <h2 class="text-xl font-semibold mb-4">Connexion</h2>
-        <label for="passwordInput" class="block text-sm font-medium text-gray-700">Mot de passe:</label>
-        <input type="password" id="passwordInput" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        <button id="submitPasswordBtn" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Déverrouiller
-        </button>
-        <p id="passwordError" class="error mt-2 hidden"></p>
-    </div>
-
     <!-- Contenu de l'application -->
-    <div id="appContent" class="hidden">
+    <div id="appContent" >
         <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestion des Heures</h1>
 
         <!-- Onglets -->
         <div class="mb-4">
             <button id="tabHours" class="tab-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2" onclick="openTab('tabHoursContent')">Saisie des Heures</button>
             <button id="tabEmployees" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabEmployeesContent')">Gestion des Employés</button>
-              <button id="tabImport" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabImportContent')">Import/Export</button>
+            <button id="tabImport" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabImportContent')">Import/Export</button>
+            <button id="tabDashboard" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabDashboardContent')">Tableau de Bord</button>
         </div>
 
         <!-- Contenu des onglets -->
@@ -154,10 +169,46 @@
                 </button>
             </div>
         </div>
+
+        <!-- Onglet Tableau de Bord -->
+        <div id="tabDashboardContent" class="tab-content">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Tableau de Bord</h2>
+
+                <div class="mb-4">
+                    <label for="dashboardMonthInput" class="block text-sm font-medium text-gray-700">Sélectionner le mois:</label>
+                    <input type="month" id="dashboardMonthInput" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" onchange="onDashboardMonthChange()">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <canvas id="hoursChart"></canvas>
+                    </div>
+                    <div>
+                        <canvas id="employeeHoursChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <h3 class="text-lg font-semibold mb-2">Total des Heures par Employé</h3>
+                    <table id="dashboardTotalsTable" class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardTotalsTableBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         // --- Éléments du DOM ---
+        // ... (JavaScript reste inchangé) ...
         const employeeNameInput = document.getElementById('employeeName');
         const addEmployeeBtn = document.getElementById('addEmployeeBtn');
         const employeeSelect = document.getElementById('employeeSelect');
@@ -171,44 +222,20 @@
         const totalsTableBody = document.getElementById('totalsTable').getElementsByTagName('tbody')[0];
         const employeeError = document.getElementById('employeeError');
         const hoursError = document.getElementById('hoursError');
-        const passwordForm = document.getElementById('passwordForm');
-        const passwordInput = document.getElementById('passwordInput');
-        const submitPasswordBtn = document.getElementById('submitPasswordBtn');
-        const passwordError = document.getElementById('passwordError');
         const appContent = document.getElementById('appContent');
-        const employeeList = document.getElementById('employeeList'); // La liste des employés
-        const deleteEmployeeMessage = document.getElementById('deleteEmployeeMessage'); //Les messages de confirmation
-        const importCSVBtn = document.getElementById('importCSVBtn'); //Bouton d'importation
-        const fileInput = document.getElementById('fileInput'); //Champs de fichier (caché)
-        const importMessage = document.getElementById('importMessage');  // Messages d'import/export
+        const employeeList = document.getElementById('employeeList');
+        const deleteEmployeeMessage = document.getElementById('deleteEmployeeMessage');
+        const importCSVBtn = document.getElementById('importCSVBtn');
+        const fileInput = document.getElementById('fileInput');
+        const importMessage = document.getElementById('importMessage');
         const exportCSVBtn = document.getElementById("exportCSVBtn");
+        const dashboardTotalsTableBody = document.getElementById('dashboardTotalsTableBody');
+        const hoursChartCanvas = document.getElementById('hoursChart');
+        const employeeHoursChartCanvas = document.getElementById('employeeHoursChart');
+        const dashboardMonthInput = document.getElementById('dashboardMonthInput');
+        let hoursChart, employeeHoursChart;
 
-        // --- MOT DE PASSE EN CLAIR (À NE PAS FAIRE EN PRODUCTION) ---
-        const CORRECT_PASSWORD = '0194';
 
-        // --- Fonctions utilitaires ---
-
-        // Affiche une erreur
-        function showError(element, message) {
-            element.textContent = message;
-            element.classList.remove('hidden');
-            element.classList.add('error');
-        }
-
-        // Masque une erreur
-        function hideError(element) {
-            element.textContent = '';
-            element.classList.add('hidden');
-            element.classList.remove('error');
-        }
-
-        // Gestionnaire d'erreurs localStorage (générique)
-        function handleLocalStorageError(error) {
-            console.error("Erreur localStorage:", error);
-            alert("Une erreur s'est produite lors de l'accès au stockage local.  Veuillez vérifier que localStorage est activé et non plein.");
-        }
-
-        // --- Fonctions localStorage (avec gestion d'erreurs) ---
         function saveData(key, data) {
             try {
                 localStorage.setItem(key, JSON.stringify(data));
@@ -227,29 +254,30 @@
             }
         }
 
-        // --- Vérification du mot de passe ---
-        function checkPassword() {
-            const password = passwordInput.value;
-            if (password === CORRECT_PASSWORD) {
-                passwordForm.style.display = 'none';
-                appContent.classList.remove('hidden');
-                initializeAppData();
-            } else {
-                showError(passwordError, "Mot de passe incorrect.");
-            }
+        function handleLocalStorageError(error) {
+            console.error("Erreur localStorage:", error);
+            alert("Une erreur s'est produite lors de l'accès au stockage local.  Veuillez vérifier que localStorage est activé et non plein.");
         }
 
-        // --- Initialisation de l'application (après la "connexion") ---
+
         function initializeAppData() {
             updateEmployeeSelect();
             loadCachedEntry();
             renderHoursTable();
             renderTotalsTable();
             renderEmployeeList();
-            openTab('tabHoursContent'); //Ouvre l'onglet par défaut
+            initializeDashboardMonthInput();
+            renderDashboard();
+            openTab('tabHoursContent');
         }
 
-        // --- Gestion des employés ---
+        function initializeDashboardMonthInput() {
+            const now = new Date();
+            const monthString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            dashboardMonthInput.value = monthString;
+        }
+
+
         function addEmployee() {
             const name = employeeNameInput.value.trim();
             if (!name) {
@@ -303,6 +331,7 @@
             renderHoursTable();
             renderTotalsTable();
             renderEmployeeList();
+            renderDashboard();
 
             deleteEmployeeMessage.textContent = "Employé supprimé avec succès, ainsi que toutes ses heures associées.";
             deleteEmployeeMessage.classList.remove('error');
@@ -311,7 +340,7 @@
             }, 3000);
         }
 
-        // --- Gestion des heures ---
+
         function addHours() {
             const employeeId = employeeSelect.value;
             const date = dateInput.value;
@@ -394,6 +423,7 @@
             saveData('hoursData', hoursData);
             renderHoursTable();
             renderTotalsTable();
+            renderDashboard();
             cacheLastEntry(newEntry);
             clearHoursInputs();
         }
@@ -468,6 +498,7 @@
             saveData('hoursData', hoursData);
             renderHoursTable();
             renderTotalsTable();
+            renderDashboard();
         }
 
         function attachDeleteHandlers() {
@@ -499,7 +530,6 @@
             }
         }
 
-        // --- Gestion des onglets ---
         function openTab(tabId) {
             const tabContents = document.getElementsByClassName("tab-content");
             for (let i = 0; i < tabContents.length; i++) {
@@ -516,9 +546,12 @@
             const buttonId = tabId.replace("Content", "");
             document.getElementById(buttonId).classList.add("bg-blue-500", "hover:bg-blue-700", "text-white");
             document.getElementById(buttonId).classList.remove("bg-gray-300", "hover:bg-gray-400", "text-gray-800");
+
+            if (tabId === 'tabDashboardContent') {
+                renderDashboard();
+            }
         }
 
-        // --- Affichage de la liste des employés (pour la suppression) ---
         function renderEmployeeList() {
             const employees = loadData('employees') || [];
             employeeList.innerHTML = '';
@@ -543,7 +576,7 @@
             });
         }
 
-        // --- Import/Export CSV ---
+
         function exportToCSV() {
             const hoursData = loadData('hoursData') || [];
             const employees = loadData('employees') || [];
@@ -596,8 +629,7 @@
 
             const reader = new FileReader();
             reader.onload = function(event) {
-                const content = event.target.result;
-                parseCSV(content);
+                parseCSV(event.target.result);
             };
             reader.onerror = function() {
                 importMessage.textContent = "Erreur lors de la lecture du fichier.";
@@ -610,7 +642,7 @@
             const lines = content.split(/\r\n|\n/);
             const headers = lines[0].split(',');
             const newHoursData = [];
-            const employees = loadData('employees') || [];
+            let employees = loadData('employees') || [];
 
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i].trim();
@@ -632,7 +664,6 @@
                 } else {
                     employeeId = Date.now();
                     employees.push({ id: employeeId, name: employeeName });
-                    saveData('employees', employees);
                 }
 
                 const newEntry = {
@@ -643,36 +674,158 @@
                     morningDeparture: data[3].trim(),
                     afternoonArrival: data[4].trim(),
                     afternoonDeparture: data[5].trim(),
-                    totalHours: parseFloat(data[6].trim()) // Convertit en nombre
+                    totalHours: parseFloat(data[6].trim())
                 };
 
                 newHoursData.push(newEntry);
             }
 
-            // Fusion des données importées avec les données existantes
+            saveData('employees', employees);
             const existingHoursData = loadData('hoursData') || [];
-            const combinedHoursData = existingHoursData.concat(newHoursData); // Combine les tableaux
+            const combinedHoursData = existingHoursData.concat(newHoursData);
             saveData('hoursData', combinedHoursData);
 
             renderHoursTable();
             renderTotalsTable();
+            renderDashboard();
             updateEmployeeSelect();
+            renderEmployeeList();
             importMessage.textContent = "Données importées avec succès !";
             importMessage.classList.remove('error');
             setTimeout(()=>{
                 importMessage.textContent = "";
-            },3000); // Efface le message après 3 secondes
+            },3000);
         }
 
-        // --- Initialisation ---
-        appContent.classList.add('hidden');
-        passwordForm.style.display = 'block';
 
-        // Gestionnaires d'événements
-        submitPasswordBtn.addEventListener('click', (event) => {
-            event.preventDefault();
-            checkPassword();
-        });
+        function renderDashboard() {
+            const selectedMonthYear = dashboardMonthInput.value;
+            const hoursData = loadData('hoursData') || [];
+            const currentMonthHours = getCurrentMonthData(hoursData, selectedMonthYear);
+            const employeeTotals = calculateEmployeeTotalsForMonth(currentMonthHours);
+
+            renderDashboardTable(employeeTotals);
+            renderHoursPieChart(currentMonthHours);
+            renderEmployeeBarChart(employeeTotals);
+        }
+
+        function getCurrentMonthData(hoursData, selectedMonthYear) {
+            return hoursData.filter(data => data.date.startsWith(selectedMonthYear));
+        }
+
+        function calculateEmployeeTotalsForMonth(monthHoursData) {
+            const employeeTotals = {};
+            monthHoursData.forEach(data => {
+                employeeTotals[data.employee] = (employeeTotals[data.employee] || 0) + data.totalHours;
+            });
+            return employeeTotals;
+        }
+
+        function renderDashboardTable(employeeTotals) {
+            dashboardTotalsTableBody.innerHTML = '';
+            for (const employee in employeeTotals) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${employee}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${employeeTotals[employee].toFixed(2)}</td>
+                `;
+                dashboardTotalsTableBody.appendChild(row);
+            }
+        }
+
+        function renderHoursPieChart(monthHoursData) {
+            if (hoursChart) {
+                hoursChart.destroy();
+            }
+
+            const totalHoursInMonth = monthHoursData.reduce((sum, data) => sum + data.totalHours, 0);
+            const chartData = {
+                labels: ['Heures Travaillées'],
+                datasets: [{
+                    label: 'Total Heures du Mois',
+                    data: [totalHoursInMonth],
+                    backgroundColor: ['rgba(54, 162, 235, 0.8)'],
+                    borderColor: ['rgba(54, 162, 235, 1)'],
+                    borderWidth: 1
+                }]
+            };
+
+            hoursChart = new Chart(hoursChartCanvas, {
+                type: 'pie',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Total des Heures Travaillées - ${dashboardMonthInput.value}`,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+
+        function renderEmployeeBarChart(employeeTotals) {
+            if (employeeHoursChart) {
+                employeeHoursChart.destroy();
+            }
+
+            const labels = Object.keys(employeeTotals);
+            const dataValues = Object.values(employeeTotals);
+            const backgroundColors = labels.map(() => `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.8)`);
+            const borderColors = backgroundColors.map(color => color.replace('0.8', '1'));
+
+
+            const chartData = {
+                labels: labels,
+                datasets: [{
+                    label: 'Heures par Employé',
+                    data: dataValues,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            };
+
+            employeeHoursChart = new Chart(employeeHoursChartCanvas, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Heures Travaillées par Employé - ${dashboardMonthInput.value}`,
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function onDashboardMonthChange() {
+            renderDashboard();
+        }
+
+
+        initializeAppData();
+
+
         addEmployeeBtn.addEventListener('click', addEmployee);
         addHoursBtn.addEventListener('click', addHours);
         exportCSVBtn.addEventListener('click', exportToCSV);
@@ -681,6 +834,19 @@
              fileInput.click();
          });
         fileInput.addEventListener('change', importFromCSV);
+
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.remove('hidden');
+            element.classList.add('error');
+        }
+
+        function hideError(element) {
+            element.textContent = '';
+            element.classList.add('hidden');
+            element.classList.remove('error');
+        }
+
 
     </script>
 </body>
