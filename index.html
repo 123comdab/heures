@@ -4,851 +4,529 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Heures</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .hidden { display: none; }
-        #totalsTable th { @apply bg-blue-100; }
-        .error { color: red; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        /* Style amélioré pour le tableau de bord (MODERNE ET COLORÉ) */
-        #dashboardTotalsTable {
-            @apply w-full text-sm text-left text-gray-500 dark:text-gray-400 shadow-md rounded-lg overflow-hidden; /* Ajout d'ombre et de coins arrondis */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
         }
 
-        #dashboardTotalsTable th {
-            @apply bg-blue-200 text-blue-700 uppercase font-semibold py-3 px-6; /* Fond bleu plus clair et texte bleu plus foncé */
+        body {
+            background: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
         }
 
-        #dashboardTotalsTable td {
-            @apply py-4 px-6 border-b dark:border-gray-700; /* Ajout de bordure inférieure pour séparer les lignes */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
         }
 
-        #dashboardTotalsTable tbody tr:nth-child(even) {
-            @apply bg-gray-50 dark:bg-gray-800; /* Lignes paires légèrement colorées pour l'alternance */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
         }
 
-        #dashboardTotalsTable tbody tr:last-child td {
-            @apply border-b-0; /* Supprime la bordure inférieure de la dernière ligne */
+        .sidebar, .main, .dashboard-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        #dashboardTotalsTable tbody tr:hover {
-            @apply bg-blue-100 dark:bg-gray-700 hover:shadow-lg transition-shadow duration-300 ease-in-out; /* Effet de survol avec ombre et transition */
+        .card {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        input, select {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .details {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .dashboard-section {
+            margin-top: 20px;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .charts {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans p-6">
-
-    <!-- Contenu de l'application -->
-    <div id="appContent" >
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestion des Heures</h1>
-
-        <!-- Onglets -->
-        <div class="mb-4">
-            <button id="tabHours" class="tab-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2" onclick="openTab('tabHoursContent')">Saisie des Heures</button>
-            <button id="tabEmployees" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabEmployeesContent')">Gestion des Employés</button>
-            <button id="tabImport" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabImportContent')">Import/Export</button>
-            <button id="tabDashboard" class="tab-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded" onclick="openTab('tabDashboardContent')">Tableau de Bord</button>
-        </div>
-
-        <!-- Contenu des onglets -->
-        <div id="tabHoursContent" class="tab-content active">
-            <!-- (Le contenu existant pour la saisie des heures) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Formulaire d'ajout d'employé -->
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">Ajouter un Employé</h2>
-                    <label for="employeeName" class="block text-sm font-medium text-gray-700">Nom de l'employé:</label>
-                    <input type="text" id="employeeName" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                    <button id="addEmployeeBtn" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Ajouter Employé
-                    </button>
-                    <p id="employeeError" class="error mt-2 hidden"></p>
-                </div>
-
-                <!-- Formulaire de saisie des heures -->
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">Saisir les Heures</h2>
-                    <label for="employeeSelect" class="block text-sm font-medium text-gray-700">Employé:</label>
-                    <select id="employeeSelect" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="">Sélectionnez un employé</option>
-                    </select>
-
-                    <label for="date" class="block text-sm font-medium text-gray-700 mt-4">Date:</label>
-                    <input type="date" id="date" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label for="morningArrival" class="block text-sm font-medium text-gray-700">Arrivée (Matin):</label>
-                            <input type="time" id="morningArrival" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="morningDeparture" class="block text-sm font-medium text-gray-700">Départ (Matin):</label>
-                            <input type="time" id="morningDeparture" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="afternoonArrival" class="block text-sm font-medium text-gray-700">Arrivée (Après-midi):</label>
-                            <input type="time" id="afternoonArrival" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="afternoonDeparture" class="block text-sm font-medium text-gray-700">Départ (Après-midi):</label>
-                            <input type="time" id="afternoonDeparture" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        </div>
-                    </div>
-
-                    <button id="addHoursBtn" class="mt-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Ajouter les Heures
-                    </button>
-                    <p id="hoursError" class="error mt-2 hidden"></p>
-                </div>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 20px;">Gestion des Heures</h1>
+        <div class="dashboard">
+            <div class="sidebar">
+                <h3>Employés</h3>
+                <input type="text" id="employeeName" placeholder="Nom de l'employé">
+                <button onclick="addEmployee()">Ajouter Employé</button>
+                <div id="employeeList"></div>
             </div>
-
-            <!-- Tableaux -->
-            <div class="mt-8 overflow-x-auto">
-                <h2 class="text-xl font-semibold mb-4">Heures Travaillées</h2>
-                <table id="hoursTable" class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrivée (M)</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Départ (M)</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrivée (AM)</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Départ (AM)</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                    </tbody>
-                </table>
-
-            </div>
-
-            <div class="mt-8 overflow-x-auto">
-                <h2 class="text-xl font-semibold mb-4">Totaux par Mois</h2>
-                <table id="totalsTable" class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mois</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Onglet pour la gestion des employés -->
-        <div id="tabEmployeesContent" class="tab-content">
-             <div class="bg-white p-6 rounded-lg shadow">
-            <h2 class="text-xl font-semibold mb-4">Liste des Employés</h2>
-            <p id="deleteEmployeeMessage" class=" mt-2 "></p>
-            <ul id="employeeList">
-                <!-- La liste des employés sera générée ici -->
-            </ul>
-            </div>
-        </div>
-        <!-- Onglet Import/Export -->
-        <div id="tabImportContent" class="tab-content">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h2 class="text-xl font-semibold mb-4">Importer / Exporter les données</h2>
-                <p id="importMessage" class="mt-2"></p>
-
-                <button id="importCSVBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Importer CSV
-                </button>
-                <input type="file" id="fileInput" accept=".csv" class="hidden">
-
-                <button id="exportCSVBtn" class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                Exporter en CSV
-                </button>
-            </div>
-        </div>
-
-        <!-- Onglet Tableau de Bord -->
-        <div id="tabDashboardContent" class="tab-content">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h2 class="text-xl font-semibold mb-4">Tableau de Bord</h2>
-
-                <div class="mb-4">
-                    <label for="dashboardMonthInput" class="block text-sm font-medium text-gray-700">Sélectionner le mois:</label>
-                    <input type="month" id="dashboardMonthInput" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" onchange="onDashboardMonthChange()">
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="main">
+                <h3>Saisie des Heures</h3>
+                <select id="employeeSelect"></select>
+                <div class="time-grid">
                     <div>
-                        <canvas id="hoursChart"></canvas>
+                        <label>Matin Entrée</label>
+                        <input type="time" id="morningIn">
                     </div>
                     <div>
-                        <canvas id="employeeHoursChart"></canvas>
+                        <label>Matin Sortie</label>
+                        <input type="time" id="morningOut">
+                    </div>
+                    <div>
+                        <label>Après-midi Entrée</label>
+                        <input type="time" id="afternoonIn">
+                    </div>
+                    <div>
+                        <label>Après-midi Sortie</label>
+                        <input type="time" id="afternoonOut">
                     </div>
                 </div>
-
-                <div class="overflow-x-auto">
-                    <h3 class="text-lg font-semibold mb-2">Total des Heures par Employé</h3>
-                    <table id="dashboardTotalsTable" class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employé</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Heures</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dashboardTotalsTableBody" class="bg-white divide-y divide-gray-200">
-                        </tbody>
-                    </table>
+                <input type="date" id="entryDate">
+                <button onclick="addTimeEntry()">Ajouter Entrée</button>
+                <button onclick="exportToCSV()">Exporter CSV</button>
+                <input type="file" id="csvImport" accept=".csv" onchange="importFromCSV(event)">
+                
+                <h3>Historique</h3>
+                <select id="historyFilter" onchange="updateTimeEntries()">
+                    <option value="">Tous les employés</option>
+                </select>
+                <div id="timeEntries"></div>
+                <div id="totalHours"></div>
+            </div>
+        </div>
+        <div class="dashboard-section">
+            <h3>Tableau de bord</h3>
+            <select id="monthFilter" onchange="updateDashboard()">
+                <option value="">Tous les mois</option>
+            </select>
+            <div class="charts">
+                <div>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+                <div>
+                    <canvas id="employeeChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Éléments du DOM ---
-        // ... (JavaScript reste inchangé) ...
-        const employeeNameInput = document.getElementById('employeeName');
-        const addEmployeeBtn = document.getElementById('addEmployeeBtn');
-        const employeeSelect = document.getElementById('employeeSelect');
-        const dateInput = document.getElementById('date');
-        const morningArrivalInput = document.getElementById('morningArrival');
-        const morningDepartureInput = document.getElementById('morningDeparture');
-        const afternoonArrivalInput = document.getElementById('afternoonArrival');
-        const afternoonDepartureInput = document.getElementById('afternoonDeparture');
-        const addHoursBtn = document.getElementById('addHoursBtn');
-        const hoursTableBody = document.getElementById('hoursTable').getElementsByTagName('tbody')[0];
-        const totalsTableBody = document.getElementById('totalsTable').getElementsByTagName('tbody')[0];
-        const employeeError = document.getElementById('employeeError');
-        const hoursError = document.getElementById('hoursError');
-        const appContent = document.getElementById('appContent');
-        const employeeList = document.getElementById('employeeList');
-        const deleteEmployeeMessage = document.getElementById('deleteEmployeeMessage');
-        const importCSVBtn = document.getElementById('importCSVBtn');
-        const fileInput = document.getElementById('fileInput');
-        const importMessage = document.getElementById('importMessage');
-        const exportCSVBtn = document.getElementById("exportCSVBtn");
-        const dashboardTotalsTableBody = document.getElementById('dashboardTotalsTableBody');
-        const hoursChartCanvas = document.getElementById('hoursChart');
-        const employeeHoursChartCanvas = document.getElementById('employeeHoursChart');
-        const dashboardMonthInput = document.getElementById('dashboardMonthInput');
-        let hoursChart, employeeHoursChart;
+        let employees = JSON.parse(localStorage.getItem('employees')) || [];
+        let timeEntries = JSON.parse(localStorage.getItem('timeEntries')) || [];
+        let lastModifiedEmployee = null;
+        let monthlyChartInstance = null;
+        let employeeChartInstance = null;
 
-
-        function saveData(key, data) {
-            try {
-                localStorage.setItem(key, JSON.stringify(data));
-            } catch (error) {
-                handleLocalStorageError(error);
-            }
-        }
-
-        function loadData(key) {
-            try {
-                const data = localStorage.getItem(key);
-                return data ? JSON.parse(data) : null;
-            } catch (error) {
-                handleLocalStorageError(error);
-                return null;
-            }
-        }
-
-        function handleLocalStorageError(error) {
-            console.error("Erreur localStorage:", error);
-            alert("Une erreur s'est produite lors de l'accès au stockage local.  Veuillez vérifier que localStorage est activé et non plein.");
-        }
-
-
-        function initializeAppData() {
-            updateEmployeeSelect();
-            loadCachedEntry();
-            renderHoursTable();
-            renderTotalsTable();
-            renderEmployeeList();
-            initializeDashboardMonthInput();
-            renderDashboard();
-            openTab('tabHoursContent');
-        }
-
-        function initializeDashboardMonthInput() {
-            const now = new Date();
-            const monthString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            dashboardMonthInput.value = monthString;
-        }
-
+        document.addEventListener('DOMContentLoaded', () => {
+            updateEmployeeList();
+            updateTimeEntries();
+            loadCachedTimes();
+            updateMonthFilter();
+            updateDashboard();
+        });
 
         function addEmployee() {
-            const name = employeeNameInput.value.trim();
-            if (!name) {
-                showError(employeeError, "Veuillez entrer un nom d'employé.");
-                return;
-            }
-
-            const employees = loadData('employees') || [];
-            if (employees.some(emp => emp.name === name)) {
-                showError(employeeError, "Cet employé existe déjà.");
-                return;
-            }
-
-            hideError(employeeError);
-            employees.push({ id: Date.now(), name: name });
-            saveData('employees', employees);
-            updateEmployeeSelect();
-            renderEmployeeList();
-            employeeNameInput.value = "";
-        }
-
-        function updateEmployeeSelect() {
-            const employees = loadData('employees') || [];
-            employeeSelect.innerHTML = '<option value="">Sélectionnez un employé</option>';
-
-            if (employees && employees.length > 0) {
-                employees.forEach(employee => {
-                    const option = document.createElement('option');
-                    option.value = employee.id;
-                    option.textContent = employee.name;
-                    employeeSelect.appendChild(option);
-                });
+            const name = document.getElementById('employeeName').value;
+            if (name) {
+                employees.push({ id: Date.now(), name });
+                saveData();
+                updateEmployeeList();
+                document.getElementById('employeeName').value = '';
             }
         }
 
-        function deleteEmployee(employeeId) {
-            let employees = loadData('employees') || [];
-            let hoursData = loadData('hoursData') || [];
+        function updateEmployeeList() {
+            const list = document.getElementById('employeeList');
+            const select = document.getElementById('employeeSelect');
+            const filter = document.getElementById('historyFilter');
+            list.innerHTML = '';
+            select.innerHTML = '<option value="">Sélectionner un employé</option>';
+            filter.innerHTML = '<option value="">Tous les employés</option>';
+            
+            employees.forEach(emp => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `${emp.name} <button onclick="deleteEmployee(${emp.id})">Supprimer</button>`;
+                list.appendChild(div);
 
-            employees = employees.filter(emp => emp.id !== employeeId);
-            hoursData = hoursData.filter(entry => entry.employeeId !== employeeId);
+                const option = document.createElement('option');
+                option.value = emp.id;
+                option.textContent = emp.name;
+                select.appendChild(option);
 
-            if (parseInt(employeeSelect.value, 10) === employeeId) {
-                employeeSelect.value = "";
-            }
-
-            saveData('employees', employees);
-            saveData('hoursData', hoursData);
-
-            updateEmployeeSelect();
-            renderHoursTable();
-            renderTotalsTable();
-            renderEmployeeList();
-            renderDashboard();
-
-            deleteEmployeeMessage.textContent = "Employé supprimé avec succès, ainsi que toutes ses heures associées.";
-            deleteEmployeeMessage.classList.remove('error');
-            setTimeout(() => {
-                deleteEmployeeMessage.textContent = "";
-            }, 3000);
+                const filterOption = document.createElement('option');
+                filterOption.value = emp.id;
+                filterOption.textContent = emp.name;
+                filter.appendChild(filterOption);
+            });
+            updateTimeEntries();
+            updateMonthFilter();
         }
 
+        function deleteEmployee(id) {
+            employees = employees.filter(emp => emp.id !== id);
+            timeEntries = timeEntries.filter(entry => entry.employeeId !== id);
+            saveData();
+            updateEmployeeList();
+            updateDashboard();
+        }
 
-        function addHours() {
-            const employeeId = employeeSelect.value;
-            console.log("Valeur de employeeSelect.value:", employeeId); // AJOUTER CETTE LIGNE
-            const date = dateInput.value;
-            const morningArrival = morningArrivalInput.value;
-            const morningDeparture = morningDepartureInput.value;
-            const afternoonArrival = afternoonArrivalInput.value;
-            const afternoonDeparture = afternoonDepartureInput.value;
-
-            if (employeeId === "" || date === "") {
-                showError(hoursError, "Veuillez sélectionner un employé et une date.");
-                return;
-            }
-
-            if (!morningArrival && !morningDeparture && !afternoonArrival && !afternoonDeparture) {
-                showError(hoursError, "Veuillez saisir au moins une plage horaire.");
-                return;
-            }
-
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-                showError(hoursError, "Format de date invalide (AAAA-MM-JJ).");
-                return;
-            }
-
-            function isValidTime(time) {
-                return /^\d{2}:\d{2}$/.test(time);
-            }
-
-            function isDepartureAfterArrival(arrival, departure) {
-                if (!isValidTime(arrival) || !isValidTime(departure)) {
-                    return false;
-                }
-                return calculateTimeDifference(arrival, departure) > 0;
-            }
-
-            if (morningArrival && morningDeparture && !isDepartureAfterArrival(morningArrival, morningDeparture)) {
-                showError(hoursError, "L'heure de départ du matin doit être après l'heure d'arrivée.");
-                return;
-            }
-            if (afternoonArrival && afternoonDeparture && !isDepartureAfterArrival(afternoonArrival, afternoonDeparture)) {
-                showError(hoursError, "L'heure de départ de l'après-midi doit être après l'heure d'arrivée.");
-                return;
-            }
-            if (morningDeparture && afternoonArrival && calculateTimeDifference(morningDeparture, afternoonArrival) <=0){
-                showError(hoursError, "Il y a un chevauchement entre la plage horaire du matin et celle de l'après-midi.");
-                return;
-            }
-
-            hideError(hoursError);
-
-            const employees = loadData('employees') || [];
-            const employee = employees.find(emp => emp.id === parseInt(employeeId, 10));
-
-            if (!employee) {
-                showError(hoursError, "Employé introuvable.  Veuillez recharger la page.");
-                return;
-            }
-            const employeeName = employee.name;
-
-            let totalHours = 0;
-            if (morningArrival && morningDeparture) {
-                totalHours += calculateTimeDifference(morningArrival, morningDeparture);
-            }
-            if (afternoonArrival && afternoonDeparture) {
-                totalHours += calculateTimeDifference(afternoonArrival, afternoonDeparture);
-            }
-
-            const newEntry = {
-                employeeId: parseInt(employeeId, 10),
-                employee: employeeName,
+        function addTimeEntry() {
+            const employeeId = document.getElementById('employeeSelect').value;
+            const date = document.getElementById('entryDate').value;
+            if (!employeeId || !date) return alert('Veuillez sélectionner un employé et une date');
+            
+            const entry = {
+                id: Date.now(),
+                employeeId,
                 date,
-                morningArrival: morningArrival || '',
-                morningDeparture: morningDeparture || '',
-                afternoonArrival: afternoonArrival || '',
-                afternoonDeparture: afternoonDeparture || '',
-                totalHours
+                morningIn: document.getElementById('morningIn').value,
+                morningOut: document.getElementById('morningOut').value,
+                afternoonIn: document.getElementById('afternoonIn').value,
+                afternoonOut: document.getElementById('afternoonOut').value
             };
 
-            const hoursData = loadData('hoursData') || [];
-            hoursData.push(newEntry);
-            saveData('hoursData', hoursData);
-            renderHoursTable();
-            renderTotalsTable();
-            renderDashboard();
-            cacheLastEntry(newEntry);
-            clearHoursInputs();
+            timeEntries.push(entry);
+            lastModifiedEmployee = employeeId;
+            saveData();
+            cacheTimes();
+            updateTimeEntries();
+            updateDashboard();
         }
 
-        function calculateTimeDifference(startTime, endTime) {
-            const start = new Date(`1970-01-01T${startTime}:00`);
-            const end = new Date(`1970-01-01T${endTime}:00`);
-            return (end - start) / (1000 * 60 * 60);
+        function cacheTimes() {
+            const times = {
+                morningIn: document.getElementById('morningIn').value,
+                morningOut: document.getElementById('morningOut').value,
+                afternoonIn: document.getElementById('afternoonIn').value,
+                afternoonOut: document.getElementById('afternoonOut').value
+            };
+            localStorage.setItem('cachedTimes', JSON.stringify(times));
         }
 
-        function renderHoursTable() {
-            const hoursData = loadData('hoursData') || [];
-            hoursTableBody.innerHTML = '';
-            hoursData.forEach((data, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">${data.employee}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${data.date}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${data.morningArrival}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${data.morningDeparture}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${data.afternoonArrival}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${data.afternoonDeparture}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${data.totalHours.toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <button class="deleteBtn bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs" data-index="${index}">Supprimer</button>
-                    </td>
-                `;
-                hoursTableBody.appendChild(row);
-            });
-            attachDeleteHandlers();
-        }
-
-        function renderTotalsTable() {
-            const hoursData = loadData('hoursData') || [];
-            totalsTableBody.innerHTML = '';
-            const totals = calculateMonthlyTotals(hoursData);
-            for (const key in totals) {
-                const parts = key.split('|');
-                const employeeName = parts[0];
-                const month = parts[1];
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">${employeeName}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${month}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${totals[key].toFixed(2)}</td>
-                `;
-                totalsTableBody.appendChild(row);
+        function loadCachedTimes() {
+            const cached = JSON.parse(localStorage.getItem('cachedTimes'));
+            if (cached) {
+                document.getElementById('morningIn').value = cached.morningIn || '';
+                document.getElementById('morningOut').value = cached.morningOut || '';
+                document.getElementById('afternoonIn').value = cached.afternoonIn || '';
+                document.getElementById('afternoonOut').value = cached.afternoonOut || '';
             }
         }
 
-        function calculateMonthlyTotals(hoursData) {
-            const totals = {};
-            hoursData.forEach(data => {
-                const month = data.date.substring(0, 7);
-                const key = `${data.employee}|${month}`;
-                totals[key] = (totals[key] || 0) + data.totalHours;
-            });
-            return totals;
+        function calculateHours(entry) {
+            const toMinutes = time => {
+                if (!time) return 0;
+                const [h, m] = time.split(':').map(Number);
+                return h * 60 + m;
+            };
+
+            let total = 0;
+            if (entry.morningIn && entry.morningOut) {
+                total += toMinutes(entry.morningOut) - toMinutes(entry.morningIn);
+            }
+            if (entry.afternoonIn && entry.afternoonOut) {
+                total += toMinutes(entry.afternoonOut) - toMinutes(entry.afternoonIn);
+            }
+            return total < 0 ? 0 : (total / 60).toFixed(2);
         }
 
-        function clearHoursInputs() {
-            dateInput.value = "";
-            morningArrivalInput.value = "";
-            morningDepartureInput.value = "";
-            afternoonArrivalInput.value = "";
-            afternoonDepartureInput.value = "";
-        }
+        function updateTimeEntries() {
+            const entriesDiv = document.getElementById('timeEntries');
+            const totalsDiv = document.getElementById('totalHours');
+            const filterValue = document.getElementById('historyFilter').value;
+            entriesDiv.innerHTML = '';
+            const monthlyTotals = {};
 
-        function deleteHoursEntry(index) {
-            const hoursData = loadData('hoursData') || [];
-            hoursData.splice(index, 1);
-            saveData('hoursData', hoursData);
-            renderHoursTable();
-            renderTotalsTable();
-            renderDashboard();
-        }
+            let filteredEntries = timeEntries;
+            if (filterValue) {
+                filteredEntries = timeEntries.filter(entry => entry.employeeId == filterValue);
+            }
 
-        function attachDeleteHandlers() {
-            hoursTableBody.querySelectorAll('.deleteBtn').forEach(button => {
-                button.addEventListener('click', () => {
-                    deleteHoursEntry(parseInt(button.dataset.index, 10));
-                });
-            });
-        }
+            const groupedEntries = {};
+            filteredEntries.forEach(entry => {
+                const emp = employees.find(e => e.id == entry.employeeId);
+                if (!emp) return;
 
-        function cacheLastEntry(entry) {
-            localStorage.setItem('lastHoursEntry', JSON.stringify(entry));
-        }
-
-        function loadCachedEntry() {
-            const cachedEntry = loadData('lastHoursEntry');
-            if (cachedEntry) {
-                const employees = loadData('employees') || [];
-                if (employees.some(emp => emp.id === parseInt(cachedEntry.employeeId, 10))) {
-                   if (!employeeSelect.value) {
-                        employeeSelect.value = cachedEntry.employeeId;
-                    }
+                const key = `${emp.id}-${entry.date}`;
+                if (!groupedEntries[key]) {
+                    groupedEntries[key] = { name: emp.name, date: entry.date, entries: [], employeeId: emp.id };
                 }
-                dateInput.value = cachedEntry.date;
-                morningArrivalInput.value = cachedEntry.morningArrival;
-                morningDepartureInput.value = cachedEntry.morningDeparture;
-                afternoonArrivalInput.value = cachedEntry.afternoonArrival;
-                afternoonDepartureInput.value = cachedEntry.afternoonDeparture;
-            }
-        }
+                groupedEntries[key].entries.push(entry);
+            });
 
-        function openTab(tabId) {
-            const tabContents = document.getElementsByClassName("tab-content");
-            for (let i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove("active");
-            }
+            const sortedGroups = Object.values(groupedEntries).sort((a, b) => {
+                if (lastModifiedEmployee) {
+                    if (a.employeeId == lastModifiedEmployee) return -1;
+                    if (b.employeeId == lastModifiedEmployee) return 1;
+                }
+                return new Date(b.date) - new Date(a.date);
+            });
 
-            const tabButtons = document.getElementsByClassName("tab-button");
-            for (let i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].classList.remove("bg-blue-500", "hover:bg-blue-700", "text-white");
-                tabButtons[i].classList.add("bg-gray-300", "hover:bg-gray-400", "text-gray-800");
-            }
+            sortedGroups.forEach(group => {
+                let dailyHours = 0;
+                const details = group.entries.map(entry => {
+                    const hours = calculateHours(entry);
+                    dailyHours += Number(hours);
+                    return `
+                        Matin: ${entry.morningIn || '-'} - ${entry.morningOut || '-'}<br>
+                        Après-midi: ${entry.afternoonIn || '-'} - ${entry.afternoonOut || '-'}<br>
+                        <button onclick="deleteTimeEntry(${entry.id})">Supprimer</button>
+                    `;
+                }).join('<hr>');
 
-            document.getElementById(tabId).classList.add("active");
-            const buttonId = tabId.replace("Content", "");
-            document.getElementById(buttonId).classList.add("bg-blue-500", "hover:bg-blue-700", "text-white");
-            document.getElementById(buttonId).classList.remove("bg-gray-300", "hover:bg-gray-400", "text-gray-800");
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <strong>${group.name} - ${group.date}: ${dailyHours.toFixed(2)}h</strong>
+                    <div class="details">${details}</div>
+                `;
+                entriesDiv.appendChild(div);
 
-            if (tabId === 'tabDashboardContent') {
-                renderDashboard();
-            }
-        }
+                const monthKey = `${group.name}-${group.date.slice(0, 7)}`;
+                if (!monthlyTotals[monthKey]) {
+                    monthlyTotals[monthKey] = { name: group.name, month: group.date.slice(0, 7), hours: 0 };
+                }
+                monthlyTotals[monthKey].hours += dailyHours;
+            });
 
-        function renderEmployeeList() {
-            const employees = loadData('employees') || [];
-            employeeList.innerHTML = '';
-
-            if (employees.length === 0) {
-                employeeList.innerHTML = '<li>Aucun employé enregistré.</li>';
-                return;
-            }
-
-            employees.forEach(employee => {
-                const listItem = document.createElement('li');
-                listItem.className = 'mb-2';
-                listItem.textContent = employee.name;
-
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Supprimer';
-                deleteButton.className = 'bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs ml-2';
-                deleteButton.addEventListener('click', () => deleteEmployee(employee.id));
-
-                listItem.appendChild(deleteButton);
-                employeeList.appendChild(listItem);
+            totalsDiv.innerHTML = '<h3>Totaux</h3>';
+            totalsDiv.innerHTML += '<h4>Par mois</h4>';
+            Object.values(monthlyTotals).forEach(total => {
+                totalsDiv.innerHTML += `
+                    <div class="card">
+                        ${total.name} - ${total.month}: ${total.hours.toFixed(2)}h
+                    </div>
+                `;
             });
         }
 
+        function deleteTimeEntry(id) {
+            timeEntries = timeEntries.filter(entry => entry.id !== id);
+            saveData();
+            updateTimeEntries();
+            updateDashboard();
+        }
+
+        function saveData() {
+            localStorage.setItem('employees', JSON.stringify(employees));
+            localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
+        }
 
         function exportToCSV() {
-            const hoursData = loadData('hoursData') || [];
-            const employees = loadData('employees') || [];
+            const csv = [
+                'Employee,Date,MorningIn,MorningOut,AfternoonIn,AfternoonOut,Hours',
+                ...timeEntries.map(entry => {
+                    const emp = employees.find(e => e.id == entry.employeeId);
+                    return `${emp?.name || ''},${entry.date},${entry.morningIn || ''},${entry.morningOut || ''},${entry.afternoonIn || ''},${entry.afternoonOut || ''},${calculateHours(entry)}`;
+                })
+            ].join('\n');
 
-            let csvContent = "data:text/csv;charset=utf-8,";
-            let csvData = [];
-
-            csvData.push([
-                "Employé", "Date", "Arrivée (Matin)", "Départ (Matin)",
-                "Arrivée (Après-midi)", "Départ (Après-midi)", "Total Heures"
-            ]);
-
-            hoursData.forEach(data => {
-                const employee = employees.find(emp => emp.id === data.employeeId);
-                const employeeName = employee ? employee.name : "Employé Supprimé";
-
-                const row = [
-                    employeeName,
-                    data.date,
-                    data.morningArrival,
-                    data.morningDeparture,
-                    data.afternoonArrival,
-                    data.afternoonDeparture,
-                    data.totalHours.toFixed(2)
-                ];
-                csvData.push(row);
-            });
-
-            csvData.forEach(rowArray => {
-                let row = rowArray.join(",");
-                csvContent += row + "\r\n";
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "heures_travaillees.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'hours_export.csv';
+            a.click();
         }
 
-        function importFromCSV() {
-            const file = fileInput.files[0];
-            if (!file) {
-                importMessage.textContent = "Aucun fichier sélectionné.";
-                importMessage.classList.add('error');
-                return;
-            }
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(event) {
-                parseCSV(event.target.result);
-            };
-            reader.onerror = function() {
-                importMessage.textContent = "Erreur lors de la lecture du fichier.";
-                 importMessage.classList.add('error');
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1).filter(row => row.trim() !== '');
+                
+                rows.forEach(row => {
+                    const cols = row.split(',');
+                    if (cols.length < 2 || !cols[0] || !cols[1]) return;
+
+                    const [name, date, morningIn = '', morningOut = '', afternoonIn = '', afternoonOut = '', hours = ''] = cols;
+                    let emp = employees.find(e => e.name === name.trim());
+                    if (!emp) {
+                        emp = { id: Date.now() + Math.random(), name: name.trim() };
+                        employees.push(emp);
+                    }
+                    const entry = {
+                        id: Date.now() + Math.random(),
+                        employeeId: emp.id,
+                        date: date.trim(),
+                        morningIn: morningIn.trim() || '',
+                        morningOut: morningOut.trim() || '',
+                        afternoonIn: afternoonIn.trim() || '',
+                        afternoonOut: afternoonOut.trim() || ''
+                    };
+                    timeEntries.push(entry);
+                });
+                
+                saveData();
+                updateEmployeeList();
+                updateTimeEntries();
+                updateDashboard();
             };
             reader.readAsText(file);
         }
 
-        function parseCSV(content) {
-            const lines = content.split(/\r\n|\n/);
-            const headers = lines[0].split(',');
-            const newHoursData = [];
-            let employees = loadData('employees') || [];
+        function updateMonthFilter() {
+            const monthFilter = document.getElementById('monthFilter');
+            const months = [...new Set(timeEntries.map(entry => entry.date.slice(0, 7)))];
+            monthFilter.innerHTML = '<option value="">Tous les mois</option>';
+            months.sort().forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                monthFilter.appendChild(option);
+            });
+        }
 
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-
-                const data = line.split(',');
-                if (data.length !== headers.length) {
-                  importMessage.textContent = `Erreur à la ligne ${i + 1}: Nombre de colonnes incorrect.`;
-                  importMessage.classList.add('error');
-                  continue;
-                }
-
-                let employeeName = data[0].trim();
-                let employeeId = null;
-                let employee = employees.find(emp => emp.name === employeeName);
-
-                if (employee) {
-                    employeeId = employee.id;
-                } else {
-                    employeeId = Date.now();
-                    employees.push({ id: employeeId, name: employeeName });
-                }
-
-                const newEntry = {
-                    employeeId: employeeId,
-                    employee: employeeName,
-                    date: data[1].trim(),
-                    morningArrival: data[2].trim(),
-                    morningDeparture: data[3].trim(),
-                    afternoonArrival: data[4].trim(),
-                    afternoonDeparture: data[5].trim(),
-                    totalHours: parseFloat(data[6].trim())
-                };
-
-                newHoursData.push(newEntry);
+        function updateDashboard() {
+            const monthFilter = document.getElementById('monthFilter').value;
+            let filteredEntries = timeEntries;
+            if (monthFilter) {
+                filteredEntries = timeEntries.filter(entry => entry.date.startsWith(monthFilter));
             }
 
-            saveData('employees', employees);
-            const existingHoursData = loadData('hoursData') || [];
-            const combinedHoursData = existingHoursData.concat(newHoursData);
-            saveData('hoursData', combinedHoursData);
-
-            renderHoursTable();
-            renderTotalsTable();
-            renderDashboard();
-            updateEmployeeSelect();
-            renderEmployeeList();
-            importMessage.textContent = "Données importées avec succès !";
-            importMessage.classList.remove('error');
-            setTimeout(()=>{
-                importMessage.textContent = "";
-            },3000);
-        }
-
-
-        function renderDashboard() {
-            const selectedMonthYear = dashboardMonthInput.value;
-            const hoursData = loadData('hoursData') || [];
-            const currentMonthHours = getCurrentMonthData(hoursData, selectedMonthYear);
-            const employeeTotals = calculateEmployeeTotalsForMonth(currentMonthHours);
-
-            renderDashboardTable(employeeTotals);
-            renderHoursPieChart(currentMonthHours);
-            renderEmployeeBarChart(employeeTotals);
-        }
-
-        function getCurrentMonthData(hoursData, selectedMonthYear) {
-            return hoursData.filter(data => data.date.startsWith(selectedMonthYear));
-        }
-
-        function calculateEmployeeTotalsForMonth(monthHoursData) {
+            const monthlyTotals = {};
             const employeeTotals = {};
-            monthHoursData.forEach(data => {
-                employeeTotals[data.employee] = (employeeTotals[data.employee] || 0) + data.totalHours;
-            });
-            return employeeTotals;
-        }
 
-        function renderDashboardTable(employeeTotals) {
-            dashboardTotalsTableBody.innerHTML = '';
-            for (const employee in employeeTotals) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">${employee}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${employeeTotals[employee].toFixed(2)}</td>
-                `;
-                dashboardTotalsTableBody.appendChild(row);
-            }
-        }
+            filteredEntries.forEach(entry => {
+                const emp = employees.find(e => e.id == entry.employeeId);
+                if (!emp) return;
 
-        function renderHoursPieChart(monthHoursData) {
-            if (hoursChart) {
-                hoursChart.destroy();
-            }
+                const hours = Number(calculateHours(entry));
+                const month = entry.date.slice(0, 7);
 
-            const totalHoursInMonth = monthHoursData.reduce((sum, data) => sum + data.totalHours, 0);
-            const chartData = {
-                labels: ['Heures Travaillées'],
-                datasets: [{
-                    label: 'Total Heures du Mois',
-                    data: [totalHoursInMonth],
-                    backgroundColor: ['rgba(54, 162, 235, 0.8)'],
-                    borderColor: ['rgba(54, 162, 235, 1)'],
-                    borderWidth: 1
-                }]
-            };
-
-            hoursChart = new Chart(hoursChartCanvas, {
-                type: 'pie',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `Total des Heures Travaillées - ${dashboardMonthInput.value}`,
-                            font: { size: 16 }
-                        },
-                        legend: {
-                            position: 'bottom',
-                        }
-                    }
+                if (!monthlyTotals[month]) {
+                    monthlyTotals[month] = {};
                 }
+                if (!monthlyTotals[month][emp.name]) {
+                    monthlyTotals[month][emp.name] = 0;
+                }
+                monthlyTotals[month][emp.name] += hours;
+
+                if (!employeeTotals[emp.name]) {
+                    employeeTotals[emp.name] = 0;
+                }
+                employeeTotals[emp.name] += hours;
             });
-        }
 
+            // Diagramme mensuel (barres)
+            const monthlyData = monthFilter ? monthlyTotals[monthFilter] || {} : Object.values(monthlyTotals).reduce((acc, curr) => {
+                Object.keys(curr).forEach(name => {
+                    acc[name] = (acc[name] || 0) + curr[name];
+                });
+                return acc;
+            }, {});
+            const monthlyLabels = Object.keys(monthlyData);
+            const monthlyHours = Object.values(monthlyData);
 
-        function renderEmployeeBarChart(employeeTotals) {
-            if (employeeHoursChart) {
-                employeeHoursChart.destroy();
-            }
-
-            const labels = Object.keys(employeeTotals);
-            const dataValues = Object.values(employeeTotals);
-            const backgroundColors = labels.map(() => `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.8)`);
-            const borderColors = backgroundColors.map(color => color.replace('0.8', '1'));
-
-
-            const chartData = {
-                labels: labels,
-                datasets: [{
-                    label: 'Heures par Employé',
-                    data: dataValues,
-                    backgroundColor: backgroundColors,
-                    borderColor: borderColors,
-                    borderWidth: 1
-                }]
-            };
-
-            employeeHoursChart = new Chart(employeeHoursChartCanvas, {
+            if (monthlyChartInstance) monthlyChartInstance.destroy();
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            monthlyChartInstance = new Chart(monthlyCtx, {
                 type: 'bar',
-                data: chartData,
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: 'Heures',
+                        data: monthlyHours,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
                     scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+                        y: { beginAtZero: true }
                     },
                     plugins: {
-                        title: {
-                            display: true,
-                            text: `Heures Travaillées par Employé - ${dashboardMonthInput.value}`,
-                            font: { size: 16 }
-                        },
-                        legend: {
-                            display: false
-                        }
+                        title: { display: true, text: `Heures ${monthFilter || 'Totales'} par Employé` }
+                    }
+                }
+            });
+
+            // Diagramme donut (répartition par employé)
+            const employeeLabels = Object.keys(employeeTotals);
+            const employeeHours = Object.values(employeeTotals);
+            const colors = employeeLabels.map((_, i) => `hsl(${i * 360 / employeeLabels.length}, 70%, 50%)`);
+
+            if (employeeChartInstance) employeeChartInstance.destroy();
+            const employeeCtx = document.getElementById('employeeChart').getContext('2d');
+            employeeChartInstance = new Chart(employeeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: employeeLabels,
+                    datasets: [{
+                        label: 'Heures totales',
+                        data: employeeHours,
+                        backgroundColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: { display: true, text: `Répartition ${monthFilter || 'Totale'} par Employé` }
                     }
                 }
             });
         }
-
-        function onDashboardMonthChange() {
-            renderDashboard();
-        }
-
-
-        initializeAppData();
-
-
-        addEmployeeBtn.addEventListener('click', addEmployee);
-        addHoursBtn.addEventListener('click', addHours);
-        exportCSVBtn.addEventListener('click', exportToCSV);
-        employeeSelect.addEventListener('change', loadCachedEntry);
-        importCSVBtn.addEventListener('click', () => {
-             fileInput.click();
-         });
-        fileInput.addEventListener('change', importFromCSV);
-
-        function showError(element, message) {
-            element.textContent = message;
-            element.classList.remove('hidden');
-            element.classList.add('error');
-        }
-
-        function hideError(element) {
-            element.textContent = '';
-            element.classList.add('hidden');
-            element.classList.remove('error');
-        }
-
-
     </script>
 </body>
 </html>
