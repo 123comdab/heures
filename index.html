@@ -212,16 +212,15 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDz5Ed-hUldrtoQlPWc8xelfgl9bclnWrU",
-   	 authDomain: "heures-89033.firebaseapp.com",
-  	  projectId: "heures-89033",
-  	  storageBucket: "heures-89033.firebasestorage.app",
-   	 messagingSenderId: "768021018026",
-   	 appId: "1:768021018026:web:db8b588e68a65cf07a67d3",
-  	  measurementId: "G-MMV8MP7DHN"
-
-        };
+       const firebaseConfig = {
+ 	 apiKey: "AIzaSyDz5Ed-hUldrtoQlPWc8xelfgl9bclnWrU",
+  	authDomain: "heures-89033.firebaseapp.com",
+ 	 projectId: "heures-89033",
+ 	 storageBucket: "heures-89033.firebasestorage.app",
+ 	 messagingSenderId: "768021018026",
+ 	 appId: "1:768021018026:web:db8b588e68a65cf07a67d3",
+ 	 measurementId: "G-MMV8MP7DHN"
+	};
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -238,36 +237,58 @@
         });
 
         async function fetchEmployees() {
-            const snapshot = await db.collection('employees').get();
-            employees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            updateEmployeeList();
+            try {
+                const snapshot = await db.collection('employees').get();
+                employees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateEmployeeList();
+            } catch (error) {
+                console.error("Erreur lors de la récupération des employés :", error);
+            }
         }
 
         async function fetchTimeEntries() {
-            const snapshot = await db.collection('time_entries').get();
-            timeEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            updateTimeEntries();
-            updateMonthFilter();
-            updateDashboard();
+            try {
+                const snapshot = await db.collection('time_entries').get();
+                timeEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateTimeEntries();
+                updateMonthFilter();
+                updateDashboard();
+            } catch (error) {
+                console.error("Erreur lors de la récupération des entrées horaires :", error);
+            }
         }
 
         async function addEmployee() {
-            const name = document.getElementById('employeeName').value;
-            if (name) {
+            const name = document.getElementById('employeeName').value.trim();
+            if (!name) {
+                alert("Veuillez entrer un nom d'employé valide.");
+                return;
+            }
+
+            try {
                 const docRef = await db.collection('employees').add({ name });
-                employees.push({ id: docRef.id, name });
+                const newEmployee = { id: docRef.id, name };
+                employees.push(newEmployee);
                 updateEmployeeList();
                 document.getElementById('employeeName').value = '';
+                console.log("Employé ajouté avec succès :", newEmployee);
+            } catch (error) {
+                console.error("Erreur lors de l'ajout de l'employé :", error);
+                alert("Une erreur est survenue lors de l'ajout de l'employé.");
             }
         }
 
         async function deleteEmployee(id) {
-            await db.collection('employees').doc(id).delete();
-            employees = employees.filter(emp => emp.id !== id);
-            timeEntries = timeEntries.filter(entry => entry.employeeId !== id);
-            updateEmployeeList();
-            updateTimeEntries();
-            updateDashboard();
+            try {
+                await db.collection('employees').doc(id).delete();
+                employees = employees.filter(emp => emp.id !== id);
+                timeEntries = timeEntries.filter(entry => entry.employeeId !== id);
+                updateEmployeeList();
+                updateTimeEntries();
+                updateDashboard();
+            } catch (error) {
+                console.error("Erreur lors de la suppression de l'employé :", error);
+            }
         }
 
         function updateEmployeeList() {
@@ -312,12 +333,16 @@
                 afternoonOut: document.getElementById('afternoonOut').value
             };
 
-            const docRef = await db.collection('time_entries').add(entry);
-            timeEntries.push({ id: docRef.id, ...entry });
-            lastModifiedEmployee = employeeId;
-            cacheTimes();
-            updateTimeEntries();
-            updateDashboard();
+            try {
+                const docRef = await db.collection('time_entries').add(entry);
+                timeEntries.push({ id: docRef.id, ...entry });
+                lastModifiedEmployee = employeeId;
+                cacheTimes();
+                updateTimeEntries();
+                updateDashboard();
+            } catch (error) {
+                console.error("Erreur lors de l'ajout de l'entrée horaire :", error);
+            }
         }
 
         function cacheTimes() {
@@ -428,10 +453,14 @@
         }
 
         async function deleteTimeEntry(id) {
-            await db.collection('time_entries').doc(id).delete();
-            timeEntries = timeEntries.filter(entry => entry.id !== id);
-            updateTimeEntries();
-            updateDashboard();
+            try {
+                await db.collection('time_entries').doc(id).delete();
+                timeEntries = timeEntries.filter(entry => entry.id !== id);
+                updateTimeEntries();
+                updateDashboard();
+            } catch (error) {
+                console.error("Erreur lors de la suppression de l'entrée horaire :", error);
+            }
         }
 
         function exportToCSV() {
