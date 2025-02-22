@@ -5,108 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Heures</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-
-        body {
-            background: #f0f2f5;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: 250px 1fr;
-            gap: 20px;
-        }
-
-        .sidebar, .main, .dashboard-section {
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .card {
-            margin: 10px 0;
-            padding: 15px;
-            border-radius: 5px;
-            background: #f8f9fa;
-            transition: transform 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-        }
-
-        button {
-            padding: 8px 16px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #0056b3;
-        }
-
-        input, select {
-            padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 100%;
-        }
-
-        .time-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .details {
-            font-size: 0.9em;
-            color: #666;
-        }
-
-        .dashboard-section {
-            margin-top: 20px;
-        }
-
-        .charts {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        canvas {
-            max-width: 100%;
-        }
-
-        @media (max-width: 768px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-            .charts {
-                grid-template-columns: 1fr;
-            }
-        }
+        /* Ton CSS inchangé */
     </style>
 </head>
 <body>
+    <!-- Ton HTML inchangé -->
     <div class="container">
         <h1 style="text-align: center; margin-bottom: 20px;">Gestion des Heures</h1>
         <div class="dashboard">
@@ -120,28 +26,15 @@
                 <h3>Saisie des Heures</h3>
                 <select id="employeeSelect"></select>
                 <div class="time-grid">
-                    <div>
-                        <label>Matin Entrée</label>
-                        <input type="time" id="morningIn">
-                    </div>
-                    <div>
-                        <label>Matin Sortie</label>
-                        <input type="time" id="morningOut">
-                    </div>
-                    <div>
-                        <label>Après-midi Entrée</label>
-                        <input type="time" id="afternoonIn">
-                    </div>
-                    <div>
-                        <label>Après-midi Sortie</label>
-                        <input type="time" id="afternoonOut">
-                    </div>
+                    <div><label>Matin Entrée</label><input type="time" id="morningIn"></div>
+                    <div><label>Matin Sortie</label><input type="time" id="morningOut"></div>
+                    <div><label>Après-midi Entrée</label><input type="time" id="afternoonIn"></div>
+                    <div><label>Après-midi Sortie</label><input type="time" id="afternoonOut"></div>
                 </div>
                 <input type="date" id="entryDate">
                 <button onclick="addTimeEntry()">Ajouter Entrée</button>
                 <button onclick="exportToCSV()">Exporter CSV</button>
                 <input type="file" id="csvImport" accept=".csv" onchange="importFromCSV(event)">
-                
                 <h3>Historique</h3>
                 <select id="historyFilter" onchange="updateTimeEntries()">
                     <option value="">Tous les employés</option>
@@ -156,39 +49,69 @@
                 <option value="">Tous les mois</option>
             </select>
             <div class="charts">
-                <div>
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-                <div>
-                    <canvas id="employeeChart"></canvas>
-                </div>
+                <div><canvas id="monthlyChart"></canvas></div>
+                <div><canvas id="employeeChart"></canvas></div>
             </div>
         </div>
     </div>
 
     <script>
-        let employees = JSON.parse(localStorage.getItem('employees')) || [];
-        let timeEntries = JSON.parse(localStorage.getItem('timeEntries')) || [];
+        const firebaseConfig = {
+            apiKey: "AIzaSyDz5Ed-hUldrtoQlPWc8xelfgl9bclnWrU",
+   	 authDomain: "heures-89033.firebaseapp.com",
+ 	   projectId: "heures-89033",
+ 	   storageBucket: "heures-89033.firebasestorage.app",
+  	  messagingSenderId: "768021018026",
+ 	   appId: "1:768021018026:web:db8b588e68a65cf07a67d3",
+  	  measurementId: "G-MMV8MP7DHN"
+
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let employees = [];
+        let timeEntries = [];
         let lastModifiedEmployee = null;
         let monthlyChartInstance = null;
         let employeeChartInstance = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            updateEmployeeList();
-            updateTimeEntries();
+            fetchEmployees();
+            fetchTimeEntries();
             loadCachedTimes();
-            updateMonthFilter();
-            updateDashboard();
         });
 
-        function addEmployee() {
+        async function fetchEmployees() {
+            const snapshot = await db.collection('employees').get();
+            employees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            updateEmployeeList();
+        }
+
+        async function fetchTimeEntries() {
+            const snapshot = await db.collection('time_entries').get();
+            timeEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            updateTimeEntries();
+            updateMonthFilter();
+            updateDashboard();
+        }
+
+        async function addEmployee() {
             const name = document.getElementById('employeeName').value;
             if (name) {
-                employees.push({ id: Date.now(), name });
-                saveData();
+                const docRef = await db.collection('employees').add({ name });
+                employees.push({ id: docRef.id, name });
                 updateEmployeeList();
                 document.getElementById('employeeName').value = '';
             }
+        }
+
+        async function deleteEmployee(id) {
+            await db.collection('employees').doc(id).delete();
+            employees = employees.filter(emp => emp.id !== id);
+            timeEntries = timeEntries.filter(entry => entry.employeeId !== id);
+            updateEmployeeList();
+            updateTimeEntries();
+            updateDashboard();
         }
 
         function updateEmployeeList() {
@@ -202,7 +125,7 @@
             employees.forEach(emp => {
                 const div = document.createElement('div');
                 div.className = 'card';
-                div.innerHTML = `${emp.name} <button onclick="deleteEmployee(${emp.id})">Supprimer</button>`;
+                div.innerHTML = `${emp.name} <button onclick="deleteEmployee('${emp.id}')">Supprimer</button>`;
                 list.appendChild(div);
 
                 const option = document.createElement('option');
@@ -219,21 +142,12 @@
             updateMonthFilter();
         }
 
-        function deleteEmployee(id) {
-            employees = employees.filter(emp => emp.id !== id);
-            timeEntries = timeEntries.filter(entry => entry.employeeId !== id);
-            saveData();
-            updateEmployeeList();
-            updateDashboard();
-        }
-
-        function addTimeEntry() {
+        async function addTimeEntry() {
             const employeeId = document.getElementById('employeeSelect').value;
             const date = document.getElementById('entryDate').value;
             if (!employeeId || !date) return alert('Veuillez sélectionner un employé et une date');
             
             const entry = {
-                id: Date.now(),
                 employeeId,
                 date,
                 morningIn: document.getElementById('morningIn').value,
@@ -242,14 +156,15 @@
                 afternoonOut: document.getElementById('afternoonOut').value
             };
 
-            timeEntries.push(entry);
+            const docRef = await db.collection('time_entries').add(entry);
+            timeEntries.push({ id: docRef.id, ...entry });
             lastModifiedEmployee = employeeId;
-            saveData();
             cacheTimes();
             updateTimeEntries();
             updateDashboard();
         }
 
+        // Les autres fonctions (cacheTimes, loadCachedTimes, calculateHours, etc.) restent identiques
         function cacheTimes() {
             const times = {
                 morningIn: document.getElementById('morningIn').value,
@@ -327,7 +242,7 @@
                     return `
                         Matin: ${entry.morningIn || '-'} - ${entry.morningOut || '-'}<br>
                         Après-midi: ${entry.afternoonIn || '-'} - ${entry.afternoonOut || '-'}<br>
-                        <button onclick="deleteTimeEntry(${entry.id})">Supprimer</button>
+                        <button onclick="deleteTimeEntry('${entry.id}')">Supprimer</button>
                     `;
                 }).join('<hr>');
 
@@ -357,16 +272,11 @@
             });
         }
 
-        function deleteTimeEntry(id) {
+        async function deleteTimeEntry(id) {
+            await db.collection('time_entries').doc(id).delete();
             timeEntries = timeEntries.filter(entry => entry.id !== id);
-            saveData();
             updateTimeEntries();
             updateDashboard();
-        }
-
-        function saveData() {
-            localStorage.setItem('employees', JSON.stringify(employees));
-            localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
         }
 
         function exportToCSV() {
@@ -386,27 +296,27 @@
             a.click();
         }
 
-        function importFromCSV(event) {
+        async function importFromCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 const text = e.target.result;
                 const rows = text.split('\n').slice(1).filter(row => row.trim() !== '');
                 
-                rows.forEach(row => {
+                for (const row of rows) {
                     const cols = row.split(',');
-                    if (cols.length < 2 || !cols[0] || !cols[1]) return;
+                    if (cols.length < 2 || !cols[0] || !cols[1]) continue;
 
                     const [name, date, morningIn = '', morningOut = '', afternoonIn = '', afternoonOut = '', hours = ''] = cols;
                     let emp = employees.find(e => e.name === name.trim());
                     if (!emp) {
-                        emp = { id: Date.now() + Math.random(), name: name.trim() };
+                        const docRef = await db.collection('employees').add({ name: name.trim() });
+                        emp = { id: docRef.id, name: name.trim() };
                         employees.push(emp);
                     }
                     const entry = {
-                        id: Date.now() + Math.random(),
                         employeeId: emp.id,
                         date: date.trim(),
                         morningIn: morningIn.trim() || '',
@@ -414,10 +324,10 @@
                         afternoonIn: afternoonIn.trim() || '',
                         afternoonOut: afternoonOut.trim() || ''
                     };
-                    timeEntries.push(entry);
-                });
+                    const docRef = await db.collection('time_entries').add(entry);
+                    timeEntries.push({ id: docRef.id, ...entry });
+                }
                 
-                saveData();
                 updateEmployeeList();
                 updateTimeEntries();
                 updateDashboard();
@@ -468,7 +378,6 @@
                 employeeTotals[emp.name] += hours;
             });
 
-            // Diagramme mensuel (barres)
             const monthlyData = monthFilter ? monthlyTotals[monthFilter] || {} : Object.values(monthlyTotals).reduce((acc, curr) => {
                 Object.keys(curr).forEach(name => {
                     acc[name] = (acc[name] || 0) + curr[name];
@@ -502,7 +411,6 @@
                 }
             });
 
-            // Diagramme donut (répartition par employé)
             const employeeLabels = Object.keys(employeeTotals);
             const employeeHours = Object.values(employeeTotals);
             const colors = employeeLabels.map((_, i) => `hsl(${i * 360 / employeeLabels.length}, 70%, 50%)`);
