@@ -8,13 +8,166 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
     <style>
-        /* Ton CSS inchangé */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e0e7ff, #f9fafb);
+            color: #1f2937;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem 0;
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 2rem;
+        }
+
+        .sidebar, .main, .dashboard-section {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar:hover, .main:hover, .dashboard-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .sidebar h3, .main h3, .dashboard-section h3 {
+            color: #3b82f6;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .card {
+            background: #f9fafb;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            background: #f3f4f6;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .card strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .details {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        .dashboard-section {
+            margin-top: 2rem;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        canvas {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .charts {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Ton HTML inchangé -->
     <div class="container">
-        <h1 style="text-align: center; margin-bottom: 20px;">Gestion des Heures</h1>
+        <header>
+            <h1>Gestion des Heures</h1>
+        </header>
         <div class="dashboard">
             <div class="sidebar">
                 <h3>Employés</h3>
@@ -24,7 +177,9 @@
             </div>
             <div class="main">
                 <h3>Saisie des Heures</h3>
-                <select id="employeeSelect"></select>
+                <select id="employeeSelect">
+                    <option value="">Sélectionner un employé</option>
+                </select>
                 <div class="time-grid">
                     <div><label>Matin Entrée</label><input type="time" id="morningIn"></div>
                     <div><label>Matin Sortie</label><input type="time" id="morningOut"></div>
@@ -35,6 +190,7 @@
                 <button onclick="addTimeEntry()">Ajouter Entrée</button>
                 <button onclick="exportToCSV()">Exporter CSV</button>
                 <input type="file" id="csvImport" accept=".csv" onchange="importFromCSV(event)">
+                
                 <h3>Historique</h3>
                 <select id="historyFilter" onchange="updateTimeEntries()">
                     <option value="">Tous les employés</option>
@@ -59,10 +215,10 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDz5Ed-hUldrtoQlPWc8xelfgl9bclnWrU",
    	 authDomain: "heures-89033.firebaseapp.com",
- 	   projectId: "heures-89033",
- 	   storageBucket: "heures-89033.firebasestorage.app",
-  	  messagingSenderId: "768021018026",
- 	   appId: "1:768021018026:web:db8b588e68a65cf07a67d3",
+  	  projectId: "heures-89033",
+  	  storageBucket: "heures-89033.firebasestorage.app",
+   	 messagingSenderId: "768021018026",
+   	 appId: "1:768021018026:web:db8b588e68a65cf07a67d3",
   	  measurementId: "G-MMV8MP7DHN"
 
         };
@@ -164,7 +320,6 @@
             updateDashboard();
         }
 
-        // Les autres fonctions (cacheTimes, loadCachedTimes, calculateHours, etc.) restent identiques
         function cacheTimes() {
             const times = {
                 morningIn: document.getElementById('morningIn').value,
@@ -396,8 +551,8 @@
                     datasets: [{
                         label: 'Heures',
                         data: monthlyHours,
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
                         borderWidth: 1
                     }]
                 },
@@ -406,7 +561,7 @@
                         y: { beginAtZero: true }
                     },
                     plugins: {
-                        title: { display: true, text: `Heures ${monthFilter || 'Totales'} par Employé` }
+                        title: { display: true, text: `Heures ${monthFilter || 'Totales'} par Employé`, font: { size: 16 } }
                     }
                 }
             });
@@ -430,7 +585,7 @@
                 },
                 options: {
                     plugins: {
-                        title: { display: true, text: `Répartition ${monthFilter || 'Totale'} par Employé` }
+                        title: { display: true, text: `Répartition ${monthFilter || 'Totale'} par Employé`, font: { size: 16 } }
                     }
                 }
             });
