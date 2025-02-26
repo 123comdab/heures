@@ -1,624 +1,1656 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Heures</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #e0e7ff, #f9fafb);
-            color: #1f2937;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
-        header {
-            text-align: center;
-            padding: 2rem 0;
-            background: #fff;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            color: #3b82f6;
-            font-weight: 600;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 3fr;
-            gap: 2rem;
-        }
-
-        .sidebar, .main, .dashboard-section {
-            background: #fff;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar:hover, .main:hover, .dashboard-section:hover {
-            transform: translateY(-5px);
-        }
-
-        .sidebar h3, .main h3, .dashboard-section h3 {
-            color: #3b82f6;
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: 500;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 0.75rem;
-            margin: 0.5rem 0;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            transition: border-color 0.2s ease;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        button {
-            padding: 0.75rem 1.5rem;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: background 0.3s ease, transform 0.2s ease;
-        }
-
-        button:hover {
-            background: #2563eb;
-            transform: translateY(-2px);
-        }
-
-        .time-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-
-        .card {
-            background: #f9fafb;
-            padding: 1.25rem;
-            border-radius: 0.75rem;
-            margin: 1rem 0;
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            background: #f3f4f6;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .card strong {
-            color: #1f2937;
-            font-weight: 600;
-        }
-
-        .details {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin-top: 0.5rem;
-        }
-
-        .dashboard-section {
-            margin-top: 2rem;
-        }
-
-        .charts {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-
-        canvas {
-            background: #fff;
-            padding: 1rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        @media (max-width: 768px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-            .charts {
-                grid-template-columns: 1fr;
-            }
-            header h1 {
-                font-size: 2rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Heures des Employés</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* (Your existing CSS styles, unchanged) */
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --danger: #f72585;
+      --warning: #f8961e;
+      --info: #4895ef;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --border-radius: 0.5rem;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f7fa;
+      color: var(--dark);
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      margin-bottom: 2rem;
+    }
+    
+    header h1 {
+      color: var(--primary);
+      font-size: 1.8rem;
+    }
+    
+    .tabs {
+      display: flex;
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    
+    .tab {
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      font-weight: 600;
+      color: var(--gray);
+      transition: all 0.3s ease;
+    }
+    
+    .tab.active {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .tab:hover:not(.active) {
+      background-color: #f0f0f0;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .card-header h2 {
+      font-size: 1.4rem;
+      color: var(--primary);
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--border-radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      outline: none;
+    }
+    
+    .btn i {
+      margin-right: 0.5rem;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--secondary);
+    }
+    
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #d61a6c;
+    }
+    
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background-color: #2fb6e0;
+    }
+    
+    .btn-warning {
+      background-color: var(--warning);
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background-color: #e78008;
+    }
+    
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .form-group {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--gray);
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ced4da;
+      border-radius: var(--border-radius);
+      transition: border-color 0.3s ease;
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    th {
+      font-weight: 600;
+      color: var(--gray);
+    }
+    
+    tr:last-child td {
+      border-bottom: none;
+    }
+    
+    tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      color: white;
+    }
+    
+    .btn-edit {
+      background-color: var(--warning);
+    }
+    
+    .btn-edit:hover {
+      background-color: #e78008;
+    }
+    
+    .btn-delete {
+      background-color: var(--danger);
+    }
+    
+    .btn-delete:hover {
+      background-color: #d61a6c;
+    }
+    
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .stat-card {
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      color: white;
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+    }
+    
+    .stat-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      opacity: 0.9;
+    }
+    
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    
+    .chart-container {
+      height: 300px;
+      position: relative;
+    }
+    
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+      }
+      
+      .tab {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+      
+      header h1 {
+        font-size: 1.5rem;
+      }
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background-color: white;
+      border-radius: var(--border-radius);
+      width: 90%;
+      max-width: 500px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .modal-title {
+      font-size: 1.4rem;
+      color: var(--primary);
+    }
+    
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gray);
+    }
+    
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .notification {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      padding: 1rem 1.5rem;
+      border-radius: var(--border-radius);
+      color: white;
+      transform: translateY(150%);
+      transition: transform 0.3s ease;
+      z-index: 1001;
+    }
+    
+    .notification.success {
+      background-color: var(--success);
+    }
+    
+    .notification.error {
+      background-color: var(--danger);
+    }
+    
+    .notification.show {
+      transform: translateY(0);
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Gestion des Heures</h1>
-        </header>
-        <div class="dashboard">
-            <div class="sidebar">
-                <h3>Employés</h3>
-                <input type="text" id="employeeName" placeholder="Nom de l'employé">
-                <button onclick="addEmployee()">Ajouter Employé</button>
-                <div id="employeeList"></div>
-            </div>
-            <div class="main">
-                <h3>Saisie des Heures</h3>
-                <select id="employeeSelect">
-                    <option value="">Sélectionner un employé</option>
-                </select>
-                <div class="time-grid">
-                    <div><label>Matin Entrée</label><input type="time" id="morningIn"></div>
-                    <div><label>Matin Sortie</label><input type="time" id="morningOut"></div>
-                    <div><label>Après-midi Entrée</label><input type="time" id="afternoonIn"></div>
-                    <div><label>Après-midi Sortie</label><input type="time" id="afternoonOut"></div>
-                </div>
-                <input type="date" id="entryDate">
-                <button onclick="addTimeEntry()">Ajouter Entrée</button>
-                <button onclick="exportToCSV()">Exporter CSV</button>
-                <input type="file" id="csvImport" accept=".csv" onchange="importFromCSV(event)">
-                
-                <h3>Historique</h3>
-                <select id="historyFilter" onchange="updateTimeEntries()">
-                    <option value="">Tous les employés</option>
-                </select>
-                <div id="timeEntries"></div>
-                <div id="totalHours"></div>
-            </div>
-        </div>
-        <div class="dashboard-section">
-            <h3>Tableau de bord</h3>
-            <select id="monthFilter" onchange="updateDashboard()">
-                <option value="">Tous les mois</option>
-            </select>
-            <div class="charts">
-                <div><canvas id="monthlyChart"></canvas></div>
-                <div><canvas id="employeeChart"></canvas></div>
-            </div>
-        </div>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-clock"></i> Le Chamois</h1>
+      <div class="header-actions">
+        <button class="btn btn-primary" id="exportBtn"><i class="fas fa-file-export"></i> Exporter CSV</button>
+        <button class="btn btn-success" id="importBtn"><i class="fas fa-file-import"></i> Importer CSV</button>
+      </div>
+    </header>
+    
+    <div class="tabs">
+      <button class="tab active" data-target="dashboard">Tableau de bord</button>
+      <button class="tab" data-target="time-entries">Saisie des heures</button>
+      <button class="tab" data-target="employees">Employés</button>
+      <button class="tab" data-target="reports">Rapports</button>
     </div>
+    
+    <div class="tab-content active" id="dashboard">
+      <div class="dashboard">
+        <div class="stat-card">
+          <h3>Total des employés</h3>
+          <div class="value" id="totalEmployees">0</div>
+        </div>
+        <div class="stat-card">
+          <h3>Heures ce mois</h3>
+          <div class="value" id="monthHours">0</div>
+        </div>
+        <div class="stat-card">
+          <h3>Heures aujourd'hui</h3>
+          <div class="value" id="todayHours">0</div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h2>Répartition des heures</h2>
+        </div>
+        <div class="chart-container" id="hoursChart">
+          <!-- Chart will be rendered here -->
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h2>Entrées récentes</h2>
+        </div>
+        <table id="recentEntries">
+          <thead>
+            <tr>
+              <th>Employé</th>
+              <th>Date</th>
+              <th>Arrivée</th>
+              <th>Départ midi</th>
+              <th>Retour midi</th>
+              <th>Départ soir</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Recent entries will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="time-entries">
+      <div class="card">
+        <div class="card-header">
+          <h2>Saisie des heures</h2>
+          <button class="btn btn-primary" id="newEntryBtn"><i class="fas fa-plus"></i> Nouvelle entrée</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="entryEmployeeFilter">Employé</label>
+            <select class="form-control" id="entryEmployeeFilter">
+              <option value="all">Tous les employés</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="entryDateFilter">Date</label>
+            <input type="date" class="form-control" id="entryDateFilter">
+          </div>
+          <div class="form-group">
+            <label for="entryMonthFilter">Mois</label>
+            <input type="month" class="form-control" id="entryMonthFilter">
+          </div>
+        </div>
+        <table id="timeEntriesTable">
+          <thead>
+            <tr>
+              <th>Employé</th>
+              <th>Date</th>
+              <th>Arrivée</th>
+              <th>Départ midi</th>
+              <th>Retour midi</th>
+              <th>Départ soir</th>
+              <th>Total</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Time entries will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="employees">
+      <div class="card">
+        <div class="card-header">
+          <h2>Gestion des employés</h2>
+          <button class="btn btn-primary" id="newEmployeeBtn"><i class="fas fa-user-plus"></i> Nouvel employé</button>
+        </div>
+        <table id="employeesTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <!-- Remove Email and Phone columns -->
+              <!-- <th>Email</th>
+              <th>Téléphone</th> -->
+              <th>Date d'embauche</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Employees will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="reports">
+      <div class="card">
+        <div class="card-header">
+          <h2>Rapports</h2>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="reportEmployee">Employé</label>
+            <select class="form-control" id="reportEmployee">
+              <option value="all">Tous les employés</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="reportPeriod">Période</label>
+            <select class="form-control" id="reportPeriod">
+              <option value="day">Jour</option>
+              <option value="week">Semaine</option>
+              <option value="month" selected>Mois</option>
+              <option value="year">Année</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="reportDate">Date</label>
+            <input type="date" class="form-control" id="reportDate">
+          </div>
+        </div>
+        <button class="btn btn-primary" id="generateReportBtn"><i class="fas fa-chart-bar"></i> Générer rapport</button>
+        <div class="chart-container" id="reportChart">
+          <!-- Report chart will be rendered here -->
+        </div>
+        <div id="reportResults" style="margin-top: 1.5rem;">
+          <!-- Report results will be shown here -->
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Employee Form Modal -->
+  <div class="modal" id="employeeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="employeeModalTitle">Nouvel employé</h3>
+        <button class="modal-close" id="closeEmployeeModal">×</button>
+      </div>
+      <form id="employeeForm">
+        <input type="hidden" id="employeeId">
+        <div class="form-group">
+          <label for="lastName">Nom</label>
+          <input type="text" class="form-control" id="lastName" required>
+        </div>
+        <div class="form-group">
+          <label for="firstName">Prénom</label>
+          <input type="text" class="form-control" id="firstName" required>
+        </div>
+        <!-- Remove email and phone fields -->
+        <!-- <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" class="form-control" id="email" required>
+        </div>
+        <div class="form-group">
+          <label for="phone">Téléphone</label>
+          <input type="tel" class="form-control" id="phone">
+        </div> -->
+        <div class="form-group">
+          <label for="hireDate">Date d'embauche</label>
+          <input type="date" class="form-control" id="hireDate" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" id="cancelEmployeeBtn">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="saveEmployeeBtn">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Time Entry Form Modal -->
+  <div class="modal" id="timeEntryModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="timeEntryModalTitle">Nouvelle saisie</h3>
+        <button class="modal-close" id="closeTimeEntryModal">×</button>
+      </div>
+      <form id="timeEntryForm">
+        <input type="hidden" id="timeEntryId">
+        <div class="form-group">
+          <label for="entryEmployee">Employé</label>
+          <select class="form-control" id="entryEmployee" required>
+            <!-- Employees will be loaded here -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="entryDate">Date</label>
+          <input type="date" class="form-control" id="entryDate" required>
+        </div>
+        <div class="form-group">
+          <label for="startMorning">Arrivée matin</label>
+          <input type="time" class="form-control" id="startMorning">
+        </div>
+        <div class="form-group">
+          <label for="endMorning">Départ midi</label>
+          <input type="time" class="form-control" id="endMorning">
+        </div>
+        <div class="form-group">
+          <label for="startAfternoon">Retour midi</label>
+          <input type="time" class="form-control" id="startAfternoon">
+        </div>
+        <div class="form-group">
+          <label for="endAfternoon">Départ soir</label>
+          <input type="time" class="form-control" id="endAfternoon">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" id="cancelTimeEntryBtn">Annuler</button>
+          <button type="submit" class="btn btn-primary" id="saveTimeEntryBtn">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Import Modal -->
+  <div class="modal" id="importModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Importer CSV</h3>
+        <button class="modal-close" id="closeImportModal">×</button>
+      </div>
+      <div class="form-group">
+        <label for="importFile">Fichier CSV</label>
+        <input type="file" class="form-control" id="importFile" accept=".csv">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="cancelImportBtn">Annuler</button>
+        <button class="btn btn-primary" id="processImportBtn">Importer</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Notification -->
+  <div class="notification" id="notification"></div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+  <script>
+    // Data storage
+    let employees = JSON.parse(localStorage.getItem('employees')) || [];
+    let timeEntries = JSON.parse(localStorage.getItem('timeEntries')) || [];
+    let lastEntry = JSON.parse(localStorage.getItem('lastEntry')) || {};  // Initialize lastEntry
+    
+    // DOM Elements
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Tab navigation
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.target;
+        
+        // Update active tab
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Show corresponding content
+        tabContents.forEach(content => {
+          content.classList.remove('active');
+          if (content.id === target) {
+            content.classList.add('active');
+          }
+        });
+        
+        // Refresh content on tab change
+        if (target === 'dashboard') {
+          refreshDashboard();
+        } else if (target === 'time-entries') {
+          refreshTimeEntries();
+        } else if (target === 'employees') {
+          refreshEmployees();
+        } else if (target === 'reports') {
+          refreshReportOptions();
+        }
+      });
+    });
+    
+    // Employee Management
+    const employeeModal = document.getElementById('employeeModal');
+    const employeeForm = document.getElementById('employeeForm');
+    const newEmployeeBtn = document.getElementById('newEmployeeBtn');
+    const closeEmployeeModal = document.getElementById('closeEmployeeModal');
+    const cancelEmployeeBtn = document.getElementById('cancelEmployeeBtn');
+    const employeesTable = document.getElementById('employeesTable').querySelector('tbody');
+    
+    newEmployeeBtn.addEventListener('click', () => {
+      document.getElementById('employeeModalTitle').textContent = 'Nouvel employé';
+      document.getElementById('employeeId').value = '';
+      employeeForm.reset();
+      employeeModal.classList.add('active');
+      document.getElementById('lastName').focus();
+    });
+    
+    closeEmployeeModal.addEventListener('click', () => {
+      employeeModal.classList.remove('active');
+    });
+    
+    cancelEmployeeBtn.addEventListener('click', () => {
+      employeeModal.classList.remove('active');
+    });
+    
+    employeeForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const employeeId = document.getElementById('employeeId').value;
+      const lastName = document.getElementById('lastName').value;
+      const firstName = document.getElementById('firstName').value;
+      // const email = document.getElementById('email').value;  // Removed email
+      // const phone = document.getElementById('phone').value;  // Removed phone
+      const hireDate = document.getElementById('hireDate').value;
+      
+      if (employeeId) {
+        // Update existing employee
+        const index = employees.findIndex(emp => emp.id === employeeId);
+        if (index !== -1) {
+          employees[index] = {
+            ...employees[index],
+            lastName,
+            firstName,
+            // email,  // Removed email
+            // phone,  // Removed phone
+            hireDate
+          };
+          showNotification('Employé modifié avec succès', 'success');
+        }
+      } else {
+        // Add new employee
+        const newEmployee = {
+          id: Date.now().toString(),
+          lastName,
+          firstName,
+          // email,  // Removed email
+          // phone,  // Removed phone
+          hireDate
+        };
+        employees.push(newEmployee);
+        showNotification('Employé ajouté avec succès', 'success');
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('employees', JSON.stringify(employees));
+      
+      // Refresh UI
+      refreshEmployees();
+      updateEmployeeDropdowns();
+      refreshDashboard();
+      
+      // Close modal
+      employeeModal.classList.remove('active');
+    });
+    
+    function refreshEmployees() {
+      employeesTable.innerHTML = '';
+      
+      if (employees.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="5" style="text-align: center;">Aucun employé trouvé</td>'; //colspan 5
+        employeesTable.appendChild(row);
+        return;
+      }
+      
+      employees.forEach(employee => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${employee.id}</td>
+          <td>${employee.lastName}</td>
+          <td>${employee.firstName}</td>
+          
+          <td>${formatDate(employee.hireDate)}</td>
+          <td class="actions">
+            <button class="btn-icon btn-edit edit-employee" data-id="${employee.id}"><i class="fas fa-edit"></i></button>
+            <button class="btn-icon btn-delete delete-employee" data-id="${employee.id}"><i class="fas fa-trash"></i></button>
+          </td>
+        `;
+        employeesTable.appendChild(row);
+      });
+      
+      // Add event listeners to new buttons
+      document.querySelectorAll('.edit-employee').forEach(btn => {
+        btn.addEventListener('click', () => editEmployee(btn.dataset.id));
+      });
+      
+      document.querySelectorAll('.delete-employee').forEach(btn => {
+        btn.addEventListener('click', () => deleteEmployee(btn.dataset.id));
+      });
+    }
+    
+    function editEmployee(id) {
+      const employee = employees.find(emp => emp.id === id);
+      if (!employee) return;
+      
+      document.getElementById('employeeModalTitle').textContent = 'Modifier employé';
+      document.getElementById('employeeId').value = employee.id;
+      document.getElementById('lastName').value = employee.lastName;
+      document.getElementById('firstName').value = employee.firstName;
+      // document.getElementById('email').value = employee.email;  //Removed
+      // document.getElementById('phone').value = employee.phone || '';  //Removed
+      document.getElementById('hireDate').value = employee.hireDate;
+      
+      employeeModal.classList.add('active');
+    }
+    
+    function deleteEmployee(id) {
+      if (!confirm('Êtes-vous sûr de vouloir supprimer cet employé ?')) return;
+      
+      // Delete associated time entries
+      timeEntries = timeEntries.filter(entry => entry.employeeId !== id);
+      localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
+      
+      // Delete employee
+      employees = employees.filter(emp => emp.id !== id);
+      localStorage.setItem('employees', JSON.stringify(employees));
+      
+      // Refresh UI
+      refreshEmployees();
+      updateEmployeeDropdowns();
+      refreshTimeEntries();
+      refreshDashboard();
+      
+      showNotification('Employé supprimé avec succès', 'success');
+    }
+    
+    function updateEmployeeDropdowns() {
+      // Update employee dropdowns in forms
+      const dropdowns = [
+        document.getElementById('entryEmployee'),
+        document.getElementById('entryEmployeeFilter'),
+        document.getElementById('reportEmployee')
+      ];
+      
+      dropdowns.forEach(dropdown => {
+        if (!dropdown) return;
+        
+        // Save selected value to restore after update
+        const selectedValue = dropdown.value;
+        
+        // Clear dropdown
+        dropdown.innerHTML = '';
+        
+        // Add default option for filters
+        if (dropdown.id !== 'entryEmployee') {
+          const defaultOption = document.createElement('option');
+          defaultOption.value = 'all';
+          defaultOption.textContent = 'Tous les employés';
+          dropdown.appendChild(defaultOption);
+        }
+        
+        // Add employees
+        employees.forEach(employee => {
+          const option = document.createElement('option');
+          option.value = employee.id;
+          option.textContent = `${employee.lastName} ${employee.firstName}`;
+          dropdown.appendChild(option);
+        });
+        
+        // Restore selected value if it exists
+        if (selectedValue && dropdown.querySelector(`option[value="${selectedValue}"]`)) {
+          dropdown.value = selectedValue;
+        }
+      });
+    }
+    
+    // Time Entries Management
+    const timeEntryModal = document.getElementById('timeEntryModal');
+    const timeEntryForm = document.getElementById('timeEntryForm');
+    const newEntryBtn = document.getElementById('newEntryBtn');
+    const closeTimeEntryModal = document.getElementById('closeTimeEntryModal');
+    const cancelTimeEntryBtn = document.getElementById('cancelTimeEntryBtn');
+    const timeEntriesTable = document.getElementById('timeEntriesTable').querySelector('tbody');
+    
+    newEntryBtn.addEventListener('click', () => {
+      document.getElementById('timeEntryModalTitle').textContent = 'Nouvelle saisie';
+      document.getElementById('timeEntryId').value = '';
+      timeEntryForm.reset();
+      
+      // Set default date to today
+      document.getElementById('entryDate').value = new Date().toISOString().split('T')[0];
+      
+      // Auto-fill from last entry if available
+      if (lastEntry.employeeId) {
+        document.getElementById('entryEmployee').value = lastEntry.employeeId;
+        document.getElementById('startMorning').value = lastEntry.startMorning || '';
+        document.getElementById('endMorning').value = lastEntry.endMorning || '';
+        document.getElementById('startAfternoon').value = lastEntry.startAfternoon || '';
+        document.getElementById('endAfternoon').value = lastEntry.endAfternoon || '';
+      }
+      
+      timeEntryModal.classList.add('active');
+    });
+    
+    closeTimeEntryModal.addEventListener('click', () => {
+      timeEntryModal.classList.remove('active');
+    });
+    
+    cancelTimeEntryBtn.addEventListener('click', () => {
+      timeEntryModal.classList.remove('active');
+    });
+    
+    timeEntryForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const timeEntryId = document.getElementById('timeEntryId').value;
+      const employeeId = document.getElementById('entryEmployee').value;
+      const date = document.getElementById('entryDate').value;
+      const startMorning = document.getElementById('startMorning').value;
+      const endMorning = document.getElementById('endMorning').value;
+      const startAfternoon = document.getElementById('startAfternoon').value;
+      const endAfternoon = document.getElementById('endAfternoon').value;
+      
+      // Calculate total hours
+      let totalHours = 0;
+      
+      if (startMorning && endMorning) {
+        totalHours += calculateHours(startMorning, endMorning);
+      }
+      
+      if (startAfternoon && endAfternoon) {
+        totalHours += calculateHours(startAfternoon, endAfternoon);
+      }
+      
+      // Save last entry for caching
+      lastEntry = {
+        employeeId,
+        date,
+        startMorning,
+        endMorning,
+        startAfternoon,
+        endAfternoon
+      };
+      localStorage.setItem('lastEntry', JSON.stringify(lastEntry));
+      
+      if (timeEntryId) {
+        // Update existing entry
+        const index = timeEntries.findIndex(entry => entry.id === timeEntryId);
+        if (index !== -1) {
+          timeEntries[index] = {
+            ...timeEntries[index],
+            employeeId,
+            date,
+            startMorning,
+            endMorning,
+            startAfternoon,
+            endAfternoon,
+            totalHours
+          };
+          showNotification('Entrée modifiée avec succès', 'success');
+        }
+      } else {
+        // Add new entry
+        const newEntry = {
+          id: Date.now().toString(),
+          employeeId,
+          date,
+          startMorning,
+          endMorning,
+          startAfternoon,
+          endAfternoon,
+          totalHours
+        };
+        timeEntries.push(newEntry);
+        showNotification('Entrée ajoutée avec succès', 'success');
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
+      
+      // Refresh UI
+      refreshTimeEntries();
+      refreshDashboard();
+      
+      // Close modal
+      timeEntryModal.classList.remove('active');
+    });
+    
+    function calculateHours(start, end) {
+      const startTime = new Date(`2000-01-01T${start}`);
+      const endTime = new Date(`2000-01-01T${end}`);
+      
+      // Calculate difference in milliseconds
+      let diff = endTime - startTime;
+      
+      // Convert to hours
+            return diff / (1000 * 60 * 60);
+    }
+    
+    // Filter handlers
+    document.getElementById('entryEmployeeFilter').addEventListener('change', refreshTimeEntries);
+    document.getElementById('entryDateFilter').addEventListener('change', refreshTimeEntries);
+    document.getElementById('entryMonthFilter').addEventListener('change', refreshTimeEntries);
+    function refreshTimeEntries() {
+      timeEntriesTable.innerHTML = '';
 
-    <script>
-       const firebaseConfig = {
- 	 apiKey: "AIzaSyB-qP2pFqBhiI0ZPQbA8vtOgQAARjNkdNY",
-   	 authDomain: "heures-e328c.firebaseapp.com",
-  	  projectId: "heures-e328c",
-  	  storageBucket: "heures-e328c.firebasestorage.app",
-  	  messagingSenderId: "147900655920",
-   	 appId: "1:147900655920:web:8b019abcd95cc8ffca40f5",
-   	 measurementId: "G-4M0JEZYVV4"
-	};
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+      // Get filter values
+      const employeeFilter = document.getElementById('entryEmployeeFilter').value;
+      const dateFilter = document.getElementById('entryDateFilter').value;
+      const monthFilter = document.getElementById('entryMonthFilter').value;
 
-        let employees = [];
-        let timeEntries = [];
-        let lastModifiedEmployee = null;
-        let monthlyChartInstance = null;
-        let employeeChartInstance = null;
+      // Filter entries
+      let filteredEntries = [...timeEntries];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchEmployees();
-            fetchTimeEntries();
-            loadCachedTimes();
+      if (employeeFilter && employeeFilter !== 'all') {
+        filteredEntries = filteredEntries.filter(entry => entry.employeeId === employeeFilter);
+      }
+
+      if (dateFilter) {
+        filteredEntries = filteredEntries.filter(entry => entry.date === dateFilter);
+      }
+
+      if (monthFilter) {
+        const monthYear = monthFilter.split('-');
+        filteredEntries = filteredEntries.filter(entry => {
+          const entryDate = entry.date.split('-');
+          return entryDate[0] === monthYear[0] && entryDate[1] === monthYear[1];
+        });
+      }
+
+      // Sort by date (newest first) and then by employee name
+      filteredEntries.sort((a, b) => {
+        const dateComparison = new Date(b.date) - new Date(a.date);
+        if (dateComparison !== 0) return dateComparison;
+
+        const employeeA = getEmployeeName(a.employeeId);
+        const employeeB = getEmployeeName(b.employeeId);
+        return employeeA.localeCompare(employeeB);
+      });
+
+      if (filteredEntries.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="8" style="text-align: center;">Aucune entrée trouvée</td>';
+        timeEntriesTable.appendChild(row);
+        return;
+      }
+
+      filteredEntries.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${getEmployeeName(entry.employeeId)}</td>
+          <td>${formatDate(entry.date)}</td>
+          <td>${entry.startMorning || '-'}</td>
+          <td>${entry.endMorning || '-'}</td>
+          <td>${entry.startAfternoon || '-'}</td>
+          <td>${entry.endAfternoon || '-'}</td>
+          <td>${entry.totalHours.toFixed(2)}h</td>
+          <td class="actions">
+            <button class="btn-icon btn-edit edit-entry" data-id="${entry.id}"><i class="fas fa-edit"></i></button>
+            <button class="btn-icon btn-delete delete-entry" data-id="${entry.id}"><i class="fas fa-trash"></i></button>
+          </td>
+        `;
+        timeEntriesTable.appendChild(row);
+      });
+
+      // Add event listeners to new buttons
+      document.querySelectorAll('.edit-entry').forEach(btn => {
+        btn.addEventListener('click', () => editTimeEntry(btn.dataset.id));
+      });
+
+      document.querySelectorAll('.delete-entry').forEach(btn => {
+        btn.addEventListener('click', () => deleteTimeEntry(btn.dataset.id));
+      });
+    }
+
+    function getEmployeeName(id) {
+      const employee = employees.find(emp => emp.id === id);
+      return employee ? `${employee.lastName} ${employee.firstName}` : 'Employé inconnu';
+    }
+
+    function formatDate(dateString) {
+      const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+      return new Date(dateString).toLocaleDateString('fr-FR', options);
+    }
+
+    function editTimeEntry(id) {
+      const entry = timeEntries.find(entry => entry.id === id);
+      if (!entry) return;
+
+      document.getElementById('timeEntryModalTitle').textContent = 'Modifier entrée';
+      document.getElementById('timeEntryId').value = entry.id;
+      document.getElementById('entryEmployee').value = entry.employeeId;
+      document.getElementById('entryDate').value = entry.date;
+      document.getElementById('startMorning').value = entry.startMorning || '';
+      document.getElementById('endMorning').value = entry.endMorning || '';
+      document.getElementById('startAfternoon').value = entry.startAfternoon || '';
+      document.getElementById('endAfternoon').value = entry.endAfternoon || '';
+
+      timeEntryModal.classList.add('active');
+    }
+
+    function deleteTimeEntry(id) {
+      if (!confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) return;
+
+      timeEntries = timeEntries.filter(entry => entry.id !== id);
+      localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
+
+      refreshTimeEntries();
+      refreshDashboard();
+
+      showNotification('Entrée supprimée avec succès', 'success');
+    }
+
+    // Dashboard
+    function refreshDashboard() {
+      // Update stats
+      document.getElementById('totalEmployees').textContent = employees.length;
+
+      // Calculate today's hours
+      const today = new Date().toISOString().split('T')[0];
+      const todayEntries = timeEntries.filter(entry => entry.date === today);
+      const todayHours = todayEntries.reduce((total, entry) => total + entry.totalHours, 0);
+      document.getElementById('todayHours').textContent = todayHours.toFixed(2);
+
+
+      // Calculate month's hours
+      const now = new Date();
+      const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'); // YYYY-MM format
+      const monthEntries = timeEntries.filter(entry => entry.date.startsWith(currentMonth));
+      const monthHours = monthEntries.reduce((total, entry) => total + (entry.totalHours || 0), 0);  // Ensure totalHours is a number
+      document.getElementById('monthHours').textContent = monthHours.toFixed(2);
+
+
+      // Update recent entries table
+      const recentEntriesTable = document.getElementById('recentEntries').querySelector('tbody');
+      recentEntriesTable.innerHTML = '';
+
+      const recentEntries = [...timeEntries]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5);
+
+      if (recentEntries.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="7" style="text-align: center;">Aucune entrée récente</td>';
+        recentEntriesTable.appendChild(row);
+      } else {
+        recentEntries.forEach(entry => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${getEmployeeName(entry.employeeId)}</td>
+            <td>${formatDate(entry.date)}</td>
+            <td>${entry.startMorning || '-'}</td>
+            <td>${entry.endMorning || '-'}</td>
+            <td>${entry.startAfternoon || '-'}</td>
+            <td>${entry.endAfternoon || '-'}</td>
+            <td>${entry.totalHours.toFixed(2)}h</td>
+          `;
+          recentEntriesTable.appendChild(row);
+        });
+      }
+
+      // Create hours distribution chart
+      const hoursChartContainer = document.getElementById('hoursChart');
+        hoursChartContainer.innerHTML = ''; // Clear previous chart
+
+      // Get hours per employee for the current month
+      const hoursPerEmployee = {};
+
+      employees.forEach(employee => {
+        const employeeEntries = monthEntries.filter(entry => entry.employeeId === employee.id);
+        const employeeHours = employeeEntries.reduce((total, entry) => total + entry.totalHours, 0);
+
+        if (employeeHours > 0) {
+          hoursPerEmployee[`${employee.lastName} ${employee.firstName}`] = employeeHours;
+        }
+      });
+
+      // Prepare chart data
+      const chartLabels = Object.keys(hoursPerEmployee);
+      const chartData = Object.values(hoursPerEmployee);
+
+      // Destroy previous chart if exists (using the correct instance variable)
+      if (window.hoursChartInstance) {
+        window.hoursChartInstance.destroy();
+      }
+
+
+      if (chartLabels.length > 0) {
+            const ctx = document.createElement('canvas');
+            ctx.height = 300;  // Set height for the canvas
+            hoursChartContainer.appendChild(ctx); // Append to the container
+
+        window.hoursChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: chartLabels,
+            datasets: [{
+              label: 'Heures travaillées ce mois',
+              data: chartData,
+              backgroundColor: '#4361ee',
+              borderColor: '#3f37c9',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Heures'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Employés'
+                }
+              }
+            }
+          }
+        });
+      } else {
+        hoursChartContainer.innerHTML = '<div style="text-align: center; padding: 2rem;">Aucune donnée disponible pour ce mois</div>';
+      }
+    }
+
+    // Reports
+    function refreshReportOptions() {
+      // Set default date to today
+      document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+
+      // Update employee dropdown
+      updateEmployeeDropdowns();
+    }
+
+    document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+
+    function generateReport() {
+      const employeeId = document.getElementById('reportEmployee').value;
+      const period = document.getElementById('reportPeriod').value;
+      const date = document.getElementById('reportDate').value;
+
+      // Filter entries based on criteria
+      let filteredEntries = [...timeEntries];
+      let periodLabel = '';
+
+      if (employeeId !== 'all') {
+        filteredEntries = filteredEntries.filter(entry => entry.employeeId === employeeId);
+      }
+
+      const reportDate = new Date(date);
+
+      if (period === 'day') {
+        filteredEntries = filteredEntries.filter(entry => entry.date === date);
+        periodLabel = formatDate(date);
+      } else if (period === 'week') {
+        // Calculate start and end of week
+        const startOfWeek = new Date(reportDate);
+        startOfWeek.setDate(reportDate.getDate() - reportDate.getDay() + 1);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+        const startStr = startOfWeek.toISOString().split('T')[0];
+        const endStr = endOfWeek.toISOString().split('T')[0];
+
+        filteredEntries = filteredEntries.filter(entry =>
+          entry.date >= startStr && entry.date <= endStr
+        );
+
+        periodLabel = `Semaine du ${formatDate(startStr)} au ${formatDate(endStr)}`;
+      } else if (period === 'month') {
+        const yearMonth = date.slice(0, 7);
+        filteredEntries = filteredEntries.filter(entry => entry.date.startsWith(yearMonth));
+
+        const monthNames = [
+          'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+          'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+        ];
+
+        periodLabel = `${monthNames[reportDate.getMonth()]} ${reportDate.getFullYear()}`;
+      } else if (period === 'year') {
+        const year = date.slice(0, 4);
+        filteredEntries = filteredEntries.filter(entry => entry.date.startsWith(year));
+        periodLabel = `Année ${year}`;
+      }
+
+      // Calculate totals
+      const totalHours = filteredEntries.reduce((total, entry) => total + entry.totalHours, 0);
+
+      // Prepare data for display
+      let reportHtml = '';
+
+      if (filteredEntries.length === 0) {
+        reportHtml = '<div style="text-align: center; padding: 1rem;">Aucune donnée disponible pour cette période</div>';
+      } else {
+        // Group by employee
+        const employeeData = {};
+
+        filteredEntries.forEach(entry => {
+          if (!employeeData[entry.employeeId]) {
+            employeeData[entry.employeeId] = {
+              name: getEmployeeName(entry.employeeId),
+              totalHours: 0,
+              entries: []
+            };
+          }
+
+          employeeData[entry.employeeId].totalHours += entry.totalHours;
+          employeeData[entry.employeeId].entries.push(entry);
         });
 
-        async function fetchEmployees() {
+        // Generate report HTML
+        reportHtml = `
+          <h3>Rapport pour ${employeeId === 'all' ? 'tous les employés' : getEmployeeName(employeeId)}</h3>
+          <h4>Période: ${periodLabel}</h4>
+          <p>Total des heures: <strong>${totalHours.toFixed(2)}h</strong></p>
+          
+          <div style="margin-top: 1rem;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Employé</th>
+                  <th>Total heures</th>
+                  <th>% du total</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        Object.values(employeeData)
+          .sort((a, b) => b.totalHours - a.totalHours)
+          .forEach(employee => {
+            const percentage = (employee.totalHours / totalHours * 100).toFixed(2);
+            reportHtml += `
+              <tr>
+                <td>${employee.name}</td>
+                <td>${employee.totalHours.toFixed(2)}h</td>
+                <td>${percentage}%</td>
+              </tr>
+            `;
+          });
+
+        reportHtml += `
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="margin-top: 2rem;">
+            <button class="btn btn-primary" id="exportReportBtn">
+              <i class="fas fa-file-export"></i> Exporter ce rapport (CSV)
+            </button>
+          </div>
+        `;
+      }
+
+      document.getElementById('reportResults').innerHTML = reportHtml;
+
+      // Prepare chart data
+      const chartLabels = period === 'day' ? ['Total du jour'] :
+                          Object.values(employeeData || {}).map(emp => emp.name);
+
+      const chartData = period === 'day' ? [totalHours] :
+                        Object.values(employeeData || {}).map(emp => emp.totalHours);
+
+      // Create chart
+      const reportChartContainer = document.getElementById('reportChart');
+
+      // Destroy previous chart if exists
+      if (window.reportChartInstance) {
+        window.reportChartInstance.destroy();
+      }
+
+      if (chartLabels.length > 0) {
+           const ctx = document.createElement('canvas');
+            ctx.height = 300;  // Set height for the canvas
+            reportChartContainer.innerHTML = ''; // Clear previous chart
+            reportChartContainer.appendChild(ctx); // Append to container
+
+        window.reportChartInstance = new Chart(ctx, {
+          type: period === 'day' ? 'bar' : 'pie',
+          data: {
+            labels: chartLabels,
+            datasets: [{
+              label: 'Heures travaillées',
+              data: chartData,
+              backgroundColor: [
+                '#4361ee', '#3f37c9', '#4895ef', '#4cc9f0',
+                '#f72585', '#f8961e', '#577590', '#43aa8b'
+              ],
+              borderColor: '#ffffff',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: period === 'day' ? 'top' : 'right'
+              }
+            }
+          }
+        });
+      } else {
+        reportChartContainer.innerHTML = '<div style="text-align: center; padding: 2rem;">Aucune donnée disponible pour cette période</div>';
+      }
+
+      // Add export button handler
+      const exportReportBtn = document.getElementById('exportReportBtn');
+      if (exportReportBtn) {
+        exportReportBtn.addEventListener('click', () => {
+          exportReportToCSV(filteredEntries, periodLabel);
+        });
+      }
+    }
+
+    // Export/Import Functions
+    document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+
+    function exportToCSV() {
+      // Create CSV content for employees
+      let employeesCSV = 'id,lastName,firstName,hireDate\n'; // Removed email, phone
+
+      employees.forEach(employee => {
+        employeesCSV += `${employee.id},${employee.lastName},${employee.firstName},${employee.hireDate}\n`; // Removed email, phone
+      });
+
+      // Create CSV content for time entries
+      let entriesCSV = 'id,employeeId,date,startMorning,endMorning,startAfternoon,endAfternoon,totalHours\n';
+
+      timeEntries.forEach(entry => {
+        entriesCSV += `${entry.id},${entry.employeeId},${entry.date},${entry.startMorning || ''},${entry.endMorning || ''},${entry.startAfternoon || ''},${entry.endAfternoon || ''},${entry.totalHours}\n`;
+      });
+
+      // Combine both CSV contents
+      const combinedCSV = `Employees\n${employeesCSV}\nTime Entries\n${entriesCSV}`;
+
+      // Create Blob and download with combined content
+      const blob = new Blob([combinedCSV], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `timetrack_data_${new Date().toISOString().slice(0, 10)}.csv`;  // Single file name
+      link.click();
+
+      showNotification('Export CSV réussi', 'success');
+    }
+
+
+    function exportReportToCSV(entries, periodLabel) {
+      // Create CSV content for report
+      let reportCSV = 'Employé,Date,Arrivée Matin,Départ Midi,Retour Midi,Départ Soir,Total Heures\n';
+
+      entries.forEach(entry => {
+        reportCSV += `${getEmployeeName(entry.employeeId)},${entry.date},${entry.startMorning || ''},${entry.endMorning || ''},${entry.startAfternoon || ''},${entry.endAfternoon || ''},${entry.totalHours}\n`;
+      });
+
+      // Create Blob and download
+      const blob = new Blob([reportCSV], { type: 'text/csv' });
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `rapport_${periodLabel.replace(/\s/g, '_')}.csv`;
+      link.click();
+
+      showNotification('Export du rapport réussi', 'success');
+    }
+
+    // Import functionality
+    const importModal = document.getElementById('importModal');
+    const closeImportModal = document.getElementById('closeImportModal');
+    const cancelImportBtn = document.getElementById('cancelImportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const processImportBtn = document.getElementById('processImportBtn');
+
+    importBtn.addEventListener('click', () => {
+      document.getElementById('importFile').value = '';
+      importModal.classList.add('active');
+    });
+
+    closeImportModal.addEventListener('click', () => {
+      importModal.classList.remove('active');
+    });
+
+    cancelImportBtn.addEventListener('click', () => {
+      importModal.classList.remove('active');
+    });
+
+    processImportBtn.addEventListener('click', () => {
+        const fileInput = document.getElementById('importFile');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            showNotification('Veuillez sélectionner un fichier', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const content = e.target.result;
+
+             // Split into employee and time entry sections
+            const sections = content.split('\nTime Entries\n');
+            const employeesCSV = sections[0].replace('Employees\n', '').trim();
+            const timeEntriesCSV = sections[1] ? sections[1].trim() : ''; // Handle cases where there are no time entries
+
+
+
             try {
-                const snapshot = await db.collection('employees').get();
-                employees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                updateEmployeeList();
+                if (employeesCSV) {
+                    importEmployees(employeesCSV);
+                }
+                 if (timeEntriesCSV) {
+                    importTimeEntries(timeEntriesCSV);
+                }
+
             } catch (error) {
-                console.error("Erreur lors de la récupération des employés :", error);
+                showNotification('Erreur lors de l\'importation: ' + error.message, 'error');
+                console.error(error); // Log the full error for debugging
             }
-        }
-
-        async function fetchTimeEntries() {
-            try {
-                const snapshot = await db.collection('time_entries').get();
-                timeEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                updateTimeEntries();
-                updateMonthFilter();
-                updateDashboard();
-            } catch (error) {
-                console.error("Erreur lors de la récupération des entrées horaires :", error);
+            finally {
+                importModal.classList.remove('active'); // Always close the modal
             }
-        }
+        };
 
-        async function addEmployee() {
-            const name = document.getElementById('employeeName').value.trim();
-            if (!name) {
-                alert("Veuillez entrer un nom d'employé valide.");
-                return;
-            }
+        reader.readAsText(file);
+    });
 
-            try {
-                const docRef = await db.collection('employees').add({ name });
-                const newEmployee = { id: docRef.id, name };
-                employees.push(newEmployee);
-                updateEmployeeList();
-                document.getElementById('employeeName').value = '';
-                console.log("Employé ajouté avec succès :", newEmployee);
-            } catch (error) {
-                console.error("Erreur lors de l'ajout de l'employé :", error);
-                alert("Une erreur est survenue lors de l'ajout de l'employé.");
-            }
-        }
+  function importEmployees(csv) {
+    const lines = csv.split('\n');
 
-        async function deleteEmployee(id) {
-            try {
-                await db.collection('employees').doc(id).delete();
-                employees = employees.filter(emp => emp.id !== id);
-                timeEntries = timeEntries.filter(entry => entry.employeeId !== id);
-                updateEmployeeList();
-                updateTimeEntries();
-                updateDashboard();
-            } catch (error) {
-                console.error("Erreur lors de la suppression de l'employé :", error);
-            }
-        }
+    // Skip header row
+    if (lines.length < 2) return; // Early return for invalid CSV
 
-        function updateEmployeeList() {
-            const list = document.getElementById('employeeList');
-            const select = document.getElementById('employeeSelect');
-            const filter = document.getElementById('historyFilter');
-            list.innerHTML = '';
-            select.innerHTML = '<option value="">Sélectionner un employé</option>';
-            filter.innerHTML = '<option value="">Tous les employés</option>';
-            
-            employees.forEach(emp => {
-                const div = document.createElement('div');
-                div.className = 'card';
-                div.innerHTML = `${emp.name} <button onclick="deleteEmployee('${emp.id}')">Supprimer</button>`;
-                list.appendChild(div);
+    const newEmployees = [];
 
-                const option = document.createElement('option');
-                option.value = emp.id;
-                option.textContent = emp.name;
-                select.appendChild(option);
+    for (let i = 1; i < lines.length; i++) { // Start from 1 to skip header
+        const line = lines[i].trim();
+        if (!line) continue; // Skip empty lines
 
-                const filterOption = document.createElement('option');
-                filterOption.value = emp.id;
-                filterOption.textContent = emp.name;
-                filter.appendChild(filterOption);
-            });
-            updateTimeEntries();
-            updateMonthFilter();
-        }
+        const values = line.split(',');
 
-        async function addTimeEntry() {
-            const employeeId = document.getElementById('employeeSelect').value;
-            const date = document.getElementById('entryDate').value;
-            if (!employeeId || !date) return alert('Veuillez sélectionner un employé et une date');
-            
-            const entry = {
-                employeeId,
-                date,
-                morningIn: document.getElementById('morningIn').value,
-                morningOut: document.getElementById('morningOut').value,
-                afternoonIn: document.getElementById('afternoonIn').value,
-                afternoonOut: document.getElementById('afternoonOut').value
-            };
-
-            try {
-                const docRef = await db.collection('time_entries').add(entry);
-                timeEntries.push({ id: docRef.id, ...entry });
-                lastModifiedEmployee = employeeId;
-                cacheTimes();
-                updateTimeEntries();
-                updateDashboard();
-            } catch (error) {
-                console.error("Erreur lors de l'ajout de l'entrée horaire :", error);
-            }
-        }
-
-        function cacheTimes() {
-            const times = {
-                morningIn: document.getElementById('morningIn').value,
-                morningOut: document.getElementById('morningOut').value,
-                afternoonIn: document.getElementById('afternoonIn').value,
-                afternoonOut: document.getElementById('afternoonOut').value
-            };
-            localStorage.setItem('cachedTimes', JSON.stringify(times));
-        }
-
-        function loadCachedTimes() {
-            const cached = JSON.parse(localStorage.getItem('cachedTimes'));
-            if (cached) {
-                document.getElementById('morningIn').value = cached.morningIn || '';
-                document.getElementById('morningOut').value = cached.morningOut || '';
-                document.getElementById('afternoonIn').value = cached.afternoonIn || '';
-                document.getElementById('afternoonOut').value = cached.afternoonOut || '';
-            }
-        }
-
-        function calculateHours(entry) {
-            const toMinutes = time => {
-                if (!time) return 0;
-                const [h, m] = time.split(':').map(Number);
-                return h * 60 + m;
-            };
-
-            let total = 0;
-            if (entry.morningIn && entry.morningOut) {
-                total += toMinutes(entry.morningOut) - toMinutes(entry.morningIn);
-            }
-            if (entry.afternoonIn && entry.afternoonOut) {
-                total += toMinutes(entry.afternoonOut) - toMinutes(entry.afternoonIn);
-            }
-            return total < 0 ? 0 : (total / 60).toFixed(2);
-        }
-
-        function updateTimeEntries() {
-            const entriesDiv = document.getElementById('timeEntries');
-            const totalsDiv = document.getElementById('totalHours');
-            const filterValue = document.getElementById('historyFilter').value;
-            entriesDiv.innerHTML = '';
-            const monthlyTotals = {};
-
-            let filteredEntries = timeEntries;
-            if (filterValue) {
-                filteredEntries = timeEntries.filter(entry => entry.employeeId == filterValue);
-            }
-
-            const groupedEntries = {};
-            filteredEntries.forEach(entry => {
-                const emp = employees.find(e => e.id == entry.employeeId);
-                if (!emp) return;
-
-                const key = `${emp.id}-${entry.date}`;
-                if (!groupedEntries[key]) {
-                    groupedEntries[key] = { name: emp.name, date: entry.date, entries: [], employeeId: emp.id };
-                }
-                groupedEntries[key].entries.push(entry);
-            });
-
-            const sortedGroups = Object.values(groupedEntries).sort((a, b) => {
-                if (lastModifiedEmployee) {
-                    if (a.employeeId == lastModifiedEmployee) return -1;
-                    if (b.employeeId == lastModifiedEmployee) return 1;
-                }
-                return new Date(b.date) - new Date(a.date);
-            });
-
-            sortedGroups.forEach(group => {
-                let dailyHours = 0;
-                const details = group.entries.map(entry => {
-                    const hours = calculateHours(entry);
-                    dailyHours += Number(hours);
-                    return `
-                        Matin: ${entry.morningIn || '-'} - ${entry.morningOut || '-'}<br>
-                        Après-midi: ${entry.afternoonIn || '-'} - ${entry.afternoonOut || '-'}<br>
-                        <button onclick="deleteTimeEntry('${entry.id}')">Supprimer</button>
-                    `;
-                }).join('<hr>');
-
-                const div = document.createElement('div');
-                div.className = 'card';
-                div.innerHTML = `
-                    <strong>${group.name} - ${group.date}: ${dailyHours.toFixed(2)}h</strong>
-                    <div class="details">${details}</div>
-                `;
-                entriesDiv.appendChild(div);
-
-                const monthKey = `${group.name}-${group.date.slice(0, 7)}`;
-                if (!monthlyTotals[monthKey]) {
-                    monthlyTotals[monthKey] = { name: group.name, month: group.date.slice(0, 7), hours: 0 };
-                }
-                monthlyTotals[monthKey].hours += dailyHours;
-            });
-
-            totalsDiv.innerHTML = '<h3>Totaux</h3>';
-            totalsDiv.innerHTML += '<h4>Par mois</h4>';
-            Object.values(monthlyTotals).forEach(total => {
-                totalsDiv.innerHTML += `
-                    <div class="card">
-                        ${total.name} - ${total.month}: ${total.hours.toFixed(2)}h
-                    </div>
-                `;
-            });
-        }
-
-        async function deleteTimeEntry(id) {
-            try {
-                await db.collection('time_entries').doc(id).delete();
-                timeEntries = timeEntries.filter(entry => entry.id !== id);
-                updateTimeEntries();
-                updateDashboard();
-            } catch (error) {
-                console.error("Erreur lors de la suppression de l'entrée horaire :", error);
-            }
-        }
-
-        function exportToCSV() {
-            const csv = [
-                'Employee,Date,MorningIn,MorningOut,AfternoonIn,AfternoonOut,Hours',
-                ...timeEntries.map(entry => {
-                    const emp = employees.find(e => e.id == entry.employeeId);
-                    return `${emp?.name || ''},${entry.date},${entry.morningIn || ''},${entry.morningOut || ''},${entry.afternoonIn || ''},${entry.afternoonOut || ''},${calculateHours(entry)}`;
-                })
-            ].join('\n');
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'hours_export.csv';
-            a.click();
-        }
-
-        async function importFromCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const text = e.target.result;
-                const rows = text.split('\n').slice(1).filter(row => row.trim() !== '');
-                
-                for (const row of rows) {
-                    const cols = row.split(',');
-                    if (cols.length < 2 || !cols[0] || !cols[1]) continue;
-
-                    const [name, date, morningIn = '', morningOut = '', afternoonIn = '', afternoonOut = '', hours = ''] = cols;
-                    let emp = employees.find(e => e.name === name.trim());
-                    if (!emp) {
-                        const docRef = await db.collection('employees').add({ name: name.trim() });
-                        emp = { id: docRef.id, name: name.trim() };
-                        employees.push(emp);
-                    }
-                    const entry = {
-                        employeeId: emp.id,
-                        date: date.trim(),
-                        morningIn: morningIn.trim() || '',
-                        morningOut: morningOut.trim() || '',
-                        afternoonIn: afternoonIn.trim() || '',
-                        afternoonOut: afternoonOut.trim() || ''
-                    };
-                    const docRef = await db.collection('time_entries').add(entry);
-                    timeEntries.push({ id: docRef.id, ...entry });
-                }
-                
-                updateEmployeeList();
-                updateTimeEntries();
-                updateDashboard();
-            };
-            reader.readAsText(file);
-        }
-
-        function updateMonthFilter() {
-            const monthFilter = document.getElementById('monthFilter');
-            const months = [...new Set(timeEntries.map(entry => entry.date.slice(0, 7)))];
-            monthFilter.innerHTML = '<option value="">Tous les mois</option>';
-            months.sort().forEach(month => {
-                const option = document.createElement('option');
-                option.value = month;
-                option.textContent = month;
-                monthFilter.appendChild(option);
-            });
-        }
-
-        function updateDashboard() {
-            const monthFilter = document.getElementById('monthFilter').value;
-            let filteredEntries = timeEntries;
-            if (monthFilter) {
-                filteredEntries = timeEntries.filter(entry => entry.date.startsWith(monthFilter));
-            }
-
-            const monthlyTotals = {};
-            const employeeTotals = {};
-
-            filteredEntries.forEach(entry => {
-                const emp = employees.find(e => e.id == entry.employeeId);
-                if (!emp) return;
-
-                const hours = Number(calculateHours(entry));
-                const month = entry.date.slice(0, 7);
-
-                if (!monthlyTotals[month]) {
-                    monthlyTotals[month] = {};
-                }
-                if (!monthlyTotals[month][emp.name]) {
-                    monthlyTotals[month][emp.name] = 0;
-                }
-                monthlyTotals[month][emp.name] += hours;
-
-                if (!employeeTotals[emp.name]) {
-                    employeeTotals[emp.name] = 0;
-                }
-                employeeTotals[emp.name] += hours;
-            });
-
-            const monthlyData = monthFilter ? monthlyTotals[monthFilter] || {} : Object.values(monthlyTotals).reduce((acc, curr) => {
-                Object.keys(curr).forEach(name => {
-                    acc[name] = (acc[name] || 0) + curr[name];
+         if (values.length >= 4) { // Check for at least 4 values (id, lastName, firstName, hireDate)
+                newEmployees.push({
+                    id: values[0],
+                    lastName: values[1],
+                    firstName: values[2],
+                    // email: values[3],  // Removed email
+                    // phone: values[4],  // Removed phone
+                    hireDate: values[3] // Corrected index for hireDate
                 });
-                return acc;
-            }, {});
-            const monthlyLabels = Object.keys(monthlyData);
-            const monthlyHours = Object.values(monthlyData);
-
-            if (monthlyChartInstance) monthlyChartInstance.destroy();
-            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-            monthlyChartInstance = new Chart(monthlyCtx, {
-                type: 'bar',
-                data: {
-                    labels: monthlyLabels,
-                    datasets: [{
-                        label: 'Heures',
-                        data: monthlyHours,
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                        borderColor: 'rgba(59, 130, 246, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: { beginAtZero: true }
-                    },
-                    plugins: {
-                        title: { display: true, text: `Heures ${monthFilter || 'Totales'} par Employé`, font: { size: 16 } }
-                    }
-                }
-            });
-
-            const employeeLabels = Object.keys(employeeTotals);
-            const employeeHours = Object.values(employeeTotals);
-            const colors = employeeLabels.map((_, i) => `hsl(${i * 360 / employeeLabels.length}, 70%, 50%)`);
-
-            if (employeeChartInstance) employeeChartInstance.destroy();
-            const employeeCtx = document.getElementById('employeeChart').getContext('2d');
-            employeeChartInstance = new Chart(employeeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: employeeLabels,
-                    datasets: [{
-                        label: 'Heures totales',
-                        data: employeeHours,
-                        backgroundColor: colors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    plugins: {
-                        title: { display: true, text: `Répartition ${monthFilter || 'Totale'} par Employé`, font: { size: 16 } }
-                    }
-                }
-            });
+        } else {
+            console.warn(`Invalid employee data: ${line}`); // Log invalid lines
         }
-    </script>
+    }
+      if (newEmployees.length > 0) {
+          // Merge imported employees with existing ones, handling duplicates
+            newEmployees.forEach(newEmp => {
+                const existingIndex = employees.findIndex(emp => emp.id === newEmp.id);
+                if (existingIndex !== -1) {
+                    // Update existing employee
+                    employees[existingIndex] = newEmp;
+                } else {
+                    // Add new employee
+                    employees.push(newEmp);
+                }
+            });
+
+        localStorage.setItem('employees', JSON.stringify(employees));
+
+        refreshEmployees();
+        updateEmployeeDropdowns();
+        // refreshTimeEntries(); No need to refresh time entries after importing employees
+        refreshDashboard();
+
+        showNotification(`${newEmployees.length} employés importés avec succès`, 'success');
+    } else {
+       showNotification('Aucun employé valide trouvé dans le fichier', 'error');
+    }
+}
+
+    function importTimeEntries(csv) {
+      const lines = csv.split('\n');
+
+      // Skip header row
+       if (lines.length < 2) return; // Early return for invalid CSV
+
+      const newEntries = [];
+
+       for (let i = 1; i < lines.length; i++) { // Start from 1 to skip header
+        const line = lines[i].trim();
+        if (!line) continue;  // Skip empty lines
+
+        const values = line.split(',');
+         if (values.length >= 8) {
+                newEntries.push({
+                    id: values[0],
+                    employeeId: values[1],
+                    date: values[2],
+                    startMorning: values[3],
+                    endMorning: values[4],
+                    startAfternoon: values[5],
+                    endAfternoon: values[6],
+                    totalHours: parseFloat(values[7])
+                });
+         } else {
+                console.warn(`Invalid time entry data: ${line}`); // Log invalid lines
+         }
+    }
+      if (newEntries.length > 0) {
+        // Merge with existing time entries
+            newEntries.forEach(newEntry => {
+                const existingIndex = timeEntries.findIndex(entry => entry.id === newEntry.id);
+                if(existingIndex !== -1) {
+                    // Update if exists
+                    timeEntries[existingIndex] = newEntry;
+                } else {
+                    // Add new one
+                    timeEntries.push(newEntry);
+                }
+            })
+
+        localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
+
+        refreshTimeEntries();
+        refreshDashboard();
+
+        showNotification(`${newEntries.length} entrées importées avec succès`, 'success');
+      }
+      else {
+         showNotification('Aucune entrée valide trouvée dans le fichier', 'error');
+      }
+    }
+
+    // Utility Functions
+    function showNotification(message, type) {
+      const notification = document.getElementById('notification');
+
+      notification.textContent = message;
+      notification.className = `notification ${type}`;
+      notification.classList.add('show');
+
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Initialize the app
+    window.addEventListener('DOMContentLoaded', () => {
+      updateEmployeeDropdowns();
+      refreshEmployees();
+      refreshTimeEntries();
+      refreshDashboard();
+    });
+  </script>
 </body>
 </html>
