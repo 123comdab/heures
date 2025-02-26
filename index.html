@@ -212,35 +212,30 @@
     </div>
 
     <script>
-        // Configuration Firebase
-        const firebaseConfig = {
- 	 apiKey: "AIzaSyDz5Ed-hUldrtoQlPWc8xelfgl9bclnWrU",
- 	 authDomain: "heures-89033.firebaseapp.com",
- 	 databaseURL: "https://heures-89033-default-rtdb.europe-west1.firebasedatabase.app",
-	  projectId: "heures-89033",
-	  storageBucket: "heures-89033.firebasestorage.app",
- 	 messagingSenderId: "768021018026",
-  	appId: "1:768021018026:web:db8b588e68a65cf07a67d3",
- 	 measurementId: "G-MMV8MP7DHN"
-	};  
-     firebase.initializeApp(firebaseConfig);
+       const firebaseConfig = {
+ 	 apiKey: "AIzaSyB-qP2pFqBhiI0ZPQbA8vtOgQAARjNkdNY",
+   	 authDomain: "heures-e328c.firebaseapp.com",
+  	  projectId: "heures-e328c",
+  	  storageBucket: "heures-e328c.firebasestorage.app",
+  	  messagingSenderId: "147900655920",
+   	 appId: "1:147900655920:web:8b019abcd95cc8ffca40f5",
+   	 measurementId: "G-4M0JEZYVV4"
+	};
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Variables globales
         let employees = [];
         let timeEntries = [];
         let lastModifiedEmployee = null;
         let monthlyChartInstance = null;
         let employeeChartInstance = null;
 
-        // Chargement initial
         document.addEventListener('DOMContentLoaded', () => {
             fetchEmployees();
             fetchTimeEntries();
             loadCachedTimes();
         });
 
-        // Récupérer les employés depuis Firestore
         async function fetchEmployees() {
             try {
                 const snapshot = await db.collection('employees').get();
@@ -251,7 +246,6 @@
             }
         }
 
-        // Récupérer les entrées horaires depuis Firestore
         async function fetchTimeEntries() {
             try {
                 const snapshot = await db.collection('time_entries').get();
@@ -264,7 +258,6 @@
             }
         }
 
-        // Ajouter un employé
         async function addEmployee() {
             const name = document.getElementById('employeeName').value.trim();
             if (!name) {
@@ -285,7 +278,6 @@
             }
         }
 
-        // Supprimer un employé
         async function deleteEmployee(id) {
             try {
                 await db.collection('employees').doc(id).delete();
@@ -299,7 +291,6 @@
             }
         }
 
-        // Mettre à jour la liste des employés
         function updateEmployeeList() {
             const list = document.getElementById('employeeList');
             const select = document.getElementById('employeeSelect');
@@ -328,7 +319,6 @@
             updateMonthFilter();
         }
 
-        // Ajouter une entrée horaire
         async function addTimeEntry() {
             const employeeId = document.getElementById('employeeSelect').value;
             const date = document.getElementById('entryDate').value;
@@ -355,7 +345,6 @@
             }
         }
 
-        // Mettre en cache les heures saisies
         function cacheTimes() {
             const times = {
                 morningIn: document.getElementById('morningIn').value,
@@ -366,7 +355,6 @@
             localStorage.setItem('cachedTimes', JSON.stringify(times));
         }
 
-        // Charger les heures mises en cache
         function loadCachedTimes() {
             const cached = JSON.parse(localStorage.getItem('cachedTimes'));
             if (cached) {
@@ -377,7 +365,6 @@
             }
         }
 
-        // Calculer les heures
         function calculateHours(entry) {
             const toMinutes = time => {
                 if (!time) return 0;
@@ -395,7 +382,6 @@
             return total < 0 ? 0 : (total / 60).toFixed(2);
         }
 
-        // Mettre à jour l'historique
         function updateTimeEntries() {
             const entriesDiv = document.getElementById('timeEntries');
             const totalsDiv = document.getElementById('totalHours');
@@ -466,7 +452,6 @@
             });
         }
 
-        // Supprimer une entrée horaire
         async function deleteTimeEntry(id) {
             try {
                 await db.collection('time_entries').doc(id).delete();
@@ -478,7 +463,6 @@
             }
         }
 
-        // Exporter en CSV
         function exportToCSV() {
             const csv = [
                 'Employee,Date,MorningIn,MorningOut,AfternoonIn,AfternoonOut,Hours',
@@ -496,7 +480,6 @@
             a.click();
         }
 
-        // Importer depuis CSV
         async function importFromCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -536,7 +519,6 @@
             reader.readAsText(file);
         }
 
-        // Mettre à jour le filtre des mois
         function updateMonthFilter() {
             const monthFilter = document.getElementById('monthFilter');
             const months = [...new Set(timeEntries.map(entry => entry.date.slice(0, 7)))];
@@ -549,7 +531,6 @@
             });
         }
 
-        // Mettre à jour le tableau de bord
         function updateDashboard() {
             const monthFilter = document.getElementById('monthFilter').value;
             let filteredEntries = timeEntries;
